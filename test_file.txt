@@ -1,0 +1,3 @@
+test_samples/Armadillo.MG.fna
+test_samples/BaboonSTL.MG.fna
+test_samples/BaboonW.MG.fna
