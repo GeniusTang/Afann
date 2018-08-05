@@ -57,7 +57,7 @@ def write_phylip(output, a_method, sequence_list, matrix):
     if output.endswith('/'):
         filename = output + a_method + '.' + 'phylip'
     else:
-        filename = '.'.join(output, a_method, 'phylip')
+        filename = '.'.join([output, a_method, 'phylip'])
     num = len(sequence_list)
     with open(filename, 'wt') as f:
         f.write('%d\n'%num)
@@ -71,7 +71,7 @@ def write_plain(output, a_method, sequence_list, matrix):
     if output.endswith('/'):
         filename = output + a_method + '.' + 'plain'
     else:
-        filename = '.'.join(output, a_method, 'plain')
+        filename = '.'.join([output, a_method, 'plain'])
     num = len(sequence_list)
     with open(filename, 'wt') as f:
         for i in range(num):
