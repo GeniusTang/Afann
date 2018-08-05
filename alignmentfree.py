@@ -77,7 +77,7 @@ def write_plain(output, a_method, sequence_list, matrix):
         for i in range(num):
             seq_1 = '.'.join(os.path.basename(sequence_list[i]).split('.')[:-1])
             for j in np.argsort(matrix[i]):
-                seq_2 = '.'.join(os.path.basename(sequence_list[i]).split('.')[:-1])
+                seq_2 = '.'.join(os.path.basename(sequence_list[j]).split('.')[:-1])
                 if i != j:
                     f.write('%s\t%s\t%.4f\n'%(seq_1, seq_2, matrix[i][j]))
 
