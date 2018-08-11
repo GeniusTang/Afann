@@ -240,6 +240,24 @@ Ma_matrix_pairwise = partial(dist_matrix_pairwise, method = Ma)
 Eu_matrix_pairwise = partial(dist_matrix_pairwise, method = Eu)
 d2_matrix_pairwise = partial(dist_matrix_pairwise, method = d2)
  
+def dist_matrix_groupwise(sequence_list_1, sequence_list_2, M, K, Num_Threads, Reverse, P_dir, method):
+    N1 = len(sequence_list_1)
+    N2 = len(sequence_list_2)
+    matrix = np.zeros((N1, N2))
+    for i in range(N1):
+        seqfile_1 = sequence_list_1[i]
+        for j in range(N2):
+            seqfile_2 = sequence_list_2[j]
+            matrix[i][j] = method(seqfile_1, seqfile_2, M, K, Num_Threads, Reverse, P_dir)
+    return matrix
+
+d2star_matrix_groupwise = partial(dist_matrix_groupwise, method = d2star)
+d2shepp_matrix_groupwise = partial(dist_matrix_groupwise, method = d2shepp)
+CVTree_matrix_groupwise = partial(dist_matrix_groupwise, method = CVTree)
+Ma_matrix_groupwise = partial(dist_matrix_groupwise, method = Ma)
+Eu_matrix_groupwise = partial(dist_matrix_groupwise, method = Eu)
+d2_matrix_groupwise = partial(dist_matrix_groupwise, method = d2)
+
 def error_array(sequence_list, M, K, Num_Threads, P_dir, method):
     N = len(sequence_list)
     array = np.zeros(N)

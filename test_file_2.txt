@@ -1,0 +1,2 @@
+test_samples/BaboonSTL.MG.fna
+test_samples/BaboonW.MG.fna
