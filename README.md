@@ -35,3 +35,31 @@ Example2:
 ```
 python alignmentfree.py -r -a d2star,d2shepp,CVtree,Ma,Eu,d2 -k 5 -m 0 -f1 test_file_1.txt -f2 test_file_2.txt -t 12 -d test_count/ -o test_result/
 ```
+
+## Usage
+```
+python alignmentfree.py [-h] -a METHOD -k K [-m M] [-f FILENAME]
+                        [-f1 FILENAME1] [-f2 FILENAME2] [-d DIR] [-o OUTPUT]
+                        [-t THREADS] [-r]
+```
+
+Optional arguments:
+```
+  -h, --help     show this help message and exit
+  -a METHOD      A list of alignment-free method, separated by comma:
+                 d2star,d2shepp,CVtree,Ma,Eu,d2
+  -k K           Kmer length
+  -m M           Markovian Order, required for d2star, d2shepp and CVtree
+  -f FILENAME    A file that lists the paths of all samples, cannot be used
+                 together with -f1, -f2
+  -f1 FILENAME1  A file that lists the paths of the first group of samples,
+                 must be used together with -f2, cannot be used together with
+                 -f
+  -f2 FILENAME2  A file that lists the paths of the second group of samples,
+                 must be used together with -f1, cannot be used together with
+                 -f
+  -d DIR         A directory that saves kmer count
+  -o OUTPUT      Prefix of output (defualt: Current directory)
+  -t THREADS     Number of threads
+  -r             Count the reverse complement of kmers (default: False)
+```

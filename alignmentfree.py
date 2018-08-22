@@ -132,17 +132,17 @@ def write_plain_group(output, a_method, sequence_list_1, sequence_list_2, matrix
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Example: python alignmentfree.py -r -a d2star,d2shepp,CVtree -k 12 -m 10 -f filename -d dir -o output') 
-    parser.add_argument('-a', dest='method', required = True, help='A list of alignment-free method: d2star,d2shepp,CVtree,Ma,Eu,d2')
+    parser.add_argument('-a', dest='method', required = True, help='A list of alignment-free method, separated by comma: d2star,d2shepp,CVtree,Ma,Eu,d2')
     parser.add_argument('-k', dest='K', required = True, type = int, help='Kmer length')
     parser.add_argument('-m', dest='M', type = int, default=0, help='Markovian Order, required for d2star, d2shepp and CVtree')
-    parser.add_argument('-f', dest='filename', help='File of samples')
-    parser.add_argument('-f1', dest='filename1', help='File of the first group of samples')
-    parser.add_argument('-f2', dest='filename2', help='File of the second group of samples')
+    parser.add_argument('-f', dest='filename', help='A file that lists the paths of all samples, cannot be used together with -f1, -f2')
+    parser.add_argument('-f1', dest='filename1', help='A file that lists the paths of the first group of samples, must be used together with -f2, cannot be used together with -f')
+    parser.add_argument('-f2', dest='filename2', help='A file that lists the paths of the second group of samples, must be used together with -f1, cannot be used together with -f')
     parser.add_argument('-d', dest='Dir', default='None', help='A directory that saves kmer count')
-    parser.add_argument('-o', dest='output', help='Prefix of output', default='./')
+    parser.add_argument('-o', dest='output', help='Prefix of output (defualt: Current directory)', default='./')
     parser.add_argument('-t', dest='threads', type = int, default=1, help='Number of threads')
     parser.add_argument('-r', dest='reverse', action='store_const',
-                    const=True, default=False, help='Count the reverse complement (default: False)')
+                    const=True, default=False, help='Count the reverse complement of kmers (default: False)')
     args = parser.parse_args()
     K = args.K 
     M = args.M + 1
