@@ -5,8 +5,8 @@ Fast alignment-free software
 ### Program:
 * [Python3](https://www.python.org/downloads/release/python-363/) or [Anaconda3](https://conda.io/docs/user-guide/install/download.html)
 ### Packages:
-* Required Python3 packages: numpy, scipy, sklearn-learn
-We recommend use [Anaconda3](https://conda.io/docs/user-guide/install/download.html) to install all required packages:
+* Required Python3 packages: numpy, scipy, sklearn-learn.
+* We recommend use [Anaconda3](https://conda.io/docs/user-guide/install/download.html) to install all required packages:
 ```
 conda install numpy scipy scikit-learn
 ```
@@ -17,12 +17,11 @@ Clone this repository into your local directory:
 git clone https://github.com/GeniusTang/AlignmentFree.git
 ```
 
-Set up:
-### Unix:
+Unix setup:
 ```
 CC=g++ python setup.py install --install-platlib=./src/
 ```
-### Mac:
+Mac setup:
 ```
 MACOSX_DEPLOYMENT_TARGET=10.9 CC=g++ python setup.py install --install-platlib=./src/
 ```
