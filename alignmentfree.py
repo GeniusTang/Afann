@@ -139,8 +139,8 @@ if __name__ == "__main__":
     parser.add_argument('-f', dest='filename', help='File of samples')
     parser.add_argument('-f1', dest='filename1', help='File of the first group of samples')
     parser.add_argument('-f2', dest='filename2', help='File of the second group of samples')
-    parser.add_argument('-d', dest='Dir', required = True, help='A directory that saves kmer count')
-    parser.add_argument('-o', dest='output', help='Prefix of output', default='')
+    parser.add_argument('-d', dest='Dir', default='None', help='A directory that saves kmer count')
+    parser.add_argument('-o', dest='output', help='Prefix of output', default='./')
     parser.add_argument('-t', dest='threads', type = int, default=1, help='Number of threads')
     parser.add_argument('-r', dest='reverse', action='store_const',
                     const=True, default=False, help='Count the reverse complement (default: False)')
@@ -152,8 +152,12 @@ if __name__ == "__main__":
     filename2 = args.filename2
     Reverse = args.reverse
     P_dir = args.Dir
+    if P_dir == 'None':
+        print('Warning: Using -d option to save kmer counts in a directory can save you a lot of counting time.')
     Num_Threads = args.threads
     output = args.output
+    if output == './':
+        print('Warning: Using -o option to change output directory and prefix. Otherwise, output will be generated in the current directory.')
     methods = [x.strip().lower() for x in args.method.split(',')]
     if filename and not filename1 and not filename2:
         sequence_list = get_sequence_from_file(filename) 
@@ -171,4 +175,4 @@ if __name__ == "__main__":
             write_phylip_group(output, a_method, sequence_list_1, sequence_list_2, matrix)
             write_plain_group(output, a_method, sequence_list_1, sequence_list_2, matrix)
     else:
-        print('Cannot -f, -f1, -f2 at the same time!')
+        print('Cannot use -f, -f1, -f2 at the same time!')

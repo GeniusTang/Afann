@@ -2,9 +2,10 @@
 Fast alignment-free software
 
 
-Installation:
-
+##Installation:
+```
 git clone https://github.com/GeniusTang/AlignmentFree.git
+```
 
 For unix:
 
