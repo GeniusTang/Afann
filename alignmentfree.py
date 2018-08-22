@@ -6,7 +6,6 @@ from scipy import stats
 import numpy as np
 import time
 import os
-import pickle
 import method
 import argparse
 
