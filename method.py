@@ -38,13 +38,15 @@ def get_K(seqfile, K, Num_Threads, Reverse, P_dir):
         with open(seq_count_K_p, 'rb') as f:
             K_count = pickle.load(f)
     else:
+        print('Counting kmers of %s.'%seqfile)
         if K>= 6:
             K_count = np.copy(kmer_count(seqfile, K, Num_Threads, Reverse))
         else:
             K_count = np.copy(kmer_count(seqfile, K, Num_Threads, False))
             K_count = rev_count(K_count, K)
-        with open(seq_count_K_p, 'wb') as f:
-            pickle.dump(K_count, f, pickle.HIGHEST_PROTOCOL)
+        if P_dir != 'None':
+            with open(seq_count_K_p, 'wb') as f:
+                pickle.dump(K_count, f, pickle.HIGHEST_PROTOCOL)
     return K_count
 
 def get_M_K(seqfile, M, K, Num_Threads, Reverse, P_dir):
@@ -69,10 +71,12 @@ def get_M_K(seqfile, M, K, Num_Threads, Reverse, P_dir):
             else:
                 K_count = np.copy(kmer_count(seqfile, K, Num_Threads, False))
                 K_count = rev_count(K_count, K)
-        with open(seq_count_M_p, 'wb') as f:
-            pickle.dump(M_count, f, pickle.HIGHEST_PROTOCOL)
-        with open(seq_count_K_p, 'wb') as f:
-            pickle.dump(K_count, f, pickle.HIGHEST_PROTOCOL)
+        if P_dir != 'None':
+            with open(seq_count_M_p, 'wb') as f:
+                pickle.dump(M_count, f, pickle.HIGHEST_PROTOCOL)
+            with open(seq_count_K_p, 'wb') as f:
+                pickle.dump(K_count, f, pickle.HIGHEST_PROTOCOL)
+        #print(np.sum(M_count), np.sum(K_count))
     return M_count, K_count
 
 def get_transition(count_array):
@@ -95,8 +99,9 @@ def get_expect(seqfile, M, K, Num_Threads, Reverse, P_dir):
         for _ in range(K-M):
             trans = np.tile(trans, (4, 1))
             expect = (expect[:,np.newaxis] * trans).flatten()
-        with open(seqfile_e_p, "wb") as f:
-            pickle.dump(expect, f, pickle.HIGHEST_PROTOCOL)
+        if P_dir != 'None':
+            with open(seqfile_e_p, "wb") as f:
+                pickle.dump(expect, f, pickle.HIGHEST_PROTOCOL)
     return K_count, expect
 
 def get_expect_reverse(seqfile, M, K, Num_Threads, P_dir):
@@ -125,8 +130,9 @@ def get_d2star_f(seqfile, M, K, Num_Threads, Reverse, P_dir):
         with np.errstate(divide='ignore', invalid='ignore'):
             d2star_f = (K_count-expect)/np.sqrt(expect)
             d2star_f[np.isnan(d2star_f)]=0
-        with open(seqfile_f_p, "wb") as f:
-            pickle.dump(d2star_f, f, pickle.HIGHEST_PROTOCOL)
+        if P_dir != 'None':
+            with open(seqfile_f_p, "wb") as f:
+                pickle.dump(d2star_f, f, pickle.HIGHEST_PROTOCOL)
     return d2star_f
 
 def get_d2star_all_f(sequence_list, M, K, Num_Threads, Reverse, P_dir):
@@ -145,8 +151,9 @@ def get_CVTree_f(seqfile, M, K, Num_Threads, Reverse, P_dir):
         with np.errstate(divide='ignore', invalid='ignore'):
             CVTree_f = (K_count-expect)/expect
             CVTree_f[np.isnan(CVTree_f)]=0
-        with open(seqfile_f_p, "wb") as f:
-            pickle.dump(CVTree_f, f, pickle.HIGHEST_PROTOCOL)
+        if P_dir != 'None':
+            with open(seqfile_f_p, "wb") as f:
+                pickle.dump(CVTree_f, f, pickle.HIGHEST_PROTOCOL)
     return CVTree_f   
 
 def get_all_K(sequence_list, M, K, Num_Threads, Reverse, P_dir):
