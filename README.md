@@ -1,6 +1,8 @@
 # AlignmentFree
 Fast alignment-free software
 
+## Prerequisites:
+* [Anaconda3](https://conda.io/docs/user-guide/install/download.html)
 
 ## Installing:
 ```
