@@ -30,18 +30,18 @@ MACOSX_DEPLOYMENT_TARGET=10.9 CC=g++ python setup.py install --install-platlib=.
 ### Example1: 
 Calculate pairwise d2star,d2shepp,CVtree,Ma,Eu,d2 distances among all samples listed in test_file.txt, using kmer length 5, Markovian order 0. 
 * -r: Consider reverse complement of kmers. 
-* -t: Use 5 threads.
+* -t: Use 8 threads.
 * -d: Save kmer counts in test_count/
 * -o: Save outputs in test_result/
 ```
-python alignmentfree.py -r -a d2star,d2shepp,CVtree,Ma,Eu,d2 -k 5 -m 0 -f test_file.txt -t 5 -d test_count/ -o test_result/
+python alignmentfree.py -r -a d2star,d2shepp,CVtree,Ma,Eu,d2 -k 5 -m 0 -f test_file.txt -t 8 -d test_count/ -o test_result/
 ```
 ### Example2:
 Calculate pairwise d2star,d2shepp,CVtree,Ma,Eu,d2 distances among all samples listed in test_file_1.txt and all samples listed in test_file_2.txt, using kmer length 5, Markovian order 0.
 ```
-python alignmentfree.py -r -a d2star,d2shepp,CVtree,Ma,Eu,d2 -k 5 -m 0 -f1 test_file_1.txt -f2 test_file_2.txt -t 5 -d test_count/ -o test_result/
+python alignmentfree.py -r -a d2star,d2shepp,CVtree,Ma,Eu,d2 -k 5 -m 0 -f1 test_file_1.txt -f2 test_file_2.txt -t 8 -d test_count/ -o test_result/test
 ```
-
+* -o: Save outputs in test_result/ with prefix test
 ## Usage
 ```
 python alignmentfree.py [-h] -a METHOD -k K [-m M] [-f FILENAME]
