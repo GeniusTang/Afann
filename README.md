@@ -42,6 +42,11 @@ Calculate pairwise d2star,d2shepp,CVtree,Ma,Eu,d2 distances among all samples li
 python alignmentfree.py -r -a d2star,d2shepp,CVtree,Ma,Eu,d2 -k 5 -m 0 -f1 test_file_1.txt -f2 test_file_2.txt -t 8 -d test_count/ -o test_result/test
 ```
 * -o: Save outputs in test_result/ with prefix test
+### Example3:
+Calculate the Markovian orders of all sequences listed in test_file.txt.
+```
+python alignmentfree.py -r --BIC -k 5 -f test_file.txt -t 8 -d test_count/ -o test_result/test
+```
 ## Usage
 ```
 python alignmentfree.py [-h] -a METHOD -k K [-m M] [-f FILENAME]

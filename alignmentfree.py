@@ -130,9 +130,18 @@ def write_plain_group(output, a_method, sequence_list_1, sequence_list_2, matrix
                 seq_2 = '.'.join(os.path.basename(sequence_list_2[j]).split('.')[:-1])
                 f.write('%s\t%s\t%.4f\n'%(seq_1, seq_2, matrix[i][j]))
 
+def write_BIC(output, sequence_list, BIC_list):
+    if output.endswith('/'):
+        filename = output + 'BIC'
+    else:
+        filename = '.'.join([output, 'BIC'])
+    with open(filename, 'wt') as f:
+        for i in range(len(sequence_list)):
+            f.write('%s\t%d\n'%('.'.join(os.path.basename(sequence_list[i]).split('.')[:-1]), BIC_list[i]))
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Example: python alignmentfree.py -r -a d2star,d2shepp,CVtree -k 12 -m 10 -f filename -d dir -o output') 
-    parser.add_argument('-a', dest='method', required = True, help='A list of alignment-free method, separated by comma: d2star,d2shepp,CVtree,Ma,Eu,d2')
+    parser.add_argument('-a', dest='method', help='A list of alignment-free method, separated by comma: d2star,d2shepp,CVtree,Ma,Eu,d2')
     parser.add_argument('-k', dest='K', required = True, type = int, help='Kmer length')
     parser.add_argument('-m', dest='M', type = int, default=0, help='Markovian Order, required for d2star, d2shepp and CVtree')
     parser.add_argument('-f', dest='filename', help='A file that lists the paths of all samples, cannot be used together with -f1, -f2')
@@ -141,8 +150,8 @@ if __name__ == "__main__":
     parser.add_argument('-d', dest='Dir', default='None', help='A directory that saves kmer count')
     parser.add_argument('-o', dest='output', help='Prefix of output (defualt: Current directory)', default='./')
     parser.add_argument('-t', dest='threads', type = int, default=1, help='Number of threads')
-    parser.add_argument('-r', dest='reverse', action='store_const',
-                    const=True, default=False, help='Count the reverse complement of kmers (default: False)')
+    parser.add_argument('-r', dest='reverse', action='store_true', default=False, help='Count the reverse complement of kmers (default: False)')
+    parser.add_argument('--BIC', dest='BIC', action='store_true', default=False, help='Use BIC to estimate the Markovian orders of sequences')
     args = parser.parse_args()
     K = args.K 
     M = args.M + 1
@@ -150,6 +159,7 @@ if __name__ == "__main__":
     filename1 = args.filename1
     filename2 = args.filename2
     Reverse = args.reverse
+    BIC = args.BIC
     P_dir = args.Dir
     if P_dir == 'None':
         print('Warning: Using -d option to save kmer counts in a directory can save you a lot of counting time.')
@@ -157,21 +167,27 @@ if __name__ == "__main__":
     output = args.output
     if output == './':
         print('Warning: Using -o option to change output directory and prefix. Otherwise, output will be generated in the current directory.')
-    methods = [x.strip().lower() for x in args.method.split(',')]
-    if filename and not filename1 and not filename2:
-        sequence_list = get_sequence_from_file(filename) 
-        for a_method in methods:
-            print('Calculating %s.'%a_method)
-            matrix = get_matrix(a_method)(sequence_list, M, K, Num_Threads, Reverse, P_dir)
-            write_plain(output, a_method, sequence_list, matrix)
-            write_phylip(output, a_method, sequence_list, matrix)
-    elif not filename and filename1 and filename2:
-        sequence_list_1 = get_sequence_from_file(filename1)
-        sequence_list_2 = get_sequence_from_file(filename2)
-        for a_method in methods:
-            print('Calculating %s.'%a_method)
-            matrix = get_matrix_group(a_method)(sequence_list_1, sequence_list_2, M, K, Num_Threads, Reverse, P_dir)
-            write_phylip_group(output, a_method, sequence_list_1, sequence_list_2, matrix)
-            write_plain_group(output, a_method, sequence_list_1, sequence_list_2, matrix)
+    if BIC:
+        sequence_list = get_sequence_from_file(filename)
+        print('Calculating Markovian order.')
+        BIC_list = method.all_BIC(sequence_list, K, Num_Threads, Reverse, P_dir)
+        write_BIC(output, sequence_list, BIC_list)
     else:
-        print('Cannot use -f, -f1, -f2 at the same time!')
+        methods = [x.strip().lower() for x in args.method.split(',')]
+        if filename and not filename1 and not filename2:
+            sequence_list = get_sequence_from_file(filename) 
+            for a_method in methods:
+                print('Calculating %s.'%a_method)
+                matrix = get_matrix(a_method)(sequence_list, M, K, Num_Threads, Reverse, P_dir)
+                write_plain(output, a_method, sequence_list, matrix)
+                write_phylip(output, a_method, sequence_list, matrix)
+        elif not filename and filename1 and filename2:
+            sequence_list_1 = get_sequence_from_file(filename1)
+            sequence_list_2 = get_sequence_from_file(filename2)
+            for a_method in methods:
+                print('Calculating %s.'%a_method)
+                matrix = get_matrix_group(a_method)(sequence_list_1, sequence_list_2, M, K, Num_Threads, Reverse, P_dir)
+                write_phylip_group(output, a_method, sequence_list_1, sequence_list_2, matrix)
+                write_plain_group(output, a_method, sequence_list_1, sequence_list_2, matrix)
+        else:
+            print('Cannot use -f, -f1, -f2 at the same time!')

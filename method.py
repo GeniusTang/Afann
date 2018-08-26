@@ -43,7 +43,7 @@ def get_K(seqfile, K, Num_Threads, Reverse, P_dir):
             K_count = np.copy(kmer_count(seqfile, K, Num_Threads, False))
             K_count = rev_count(K_count, K)
         if P_dir != 'None':
-            np.save(K_count, seq_count_K_p)
+            np.save(seq_count_K_p, K_count)
     return K_count
 
 def get_M_K(seqfile, M, K, Num_Threads, Reverse, P_dir):
@@ -110,6 +110,28 @@ def get_expect_reverse(seqfile, M, K, Num_Threads, P_dir):
         trans = np.tile(trans, (4, 1))
         expect = (expect[:,np.newaxis] * trans).flatten()
     return K_count, expect
+
+def BIC(seqfile, K, Num_Threads, Reverse, P_dir):
+    M = K - 2
+    M_count = get_K(seqfile, M+1, Num_Threads, Reverse, P_dir)
+    S = []
+    for i in range(M+1):
+        M_count = M_count.reshape(4**M, 4)
+        with np.errstate(divide='ignore', invalid='ignore'):
+            log = M_count * np.log(M_count/np.sum(M_count, axis=1)[:,np.newaxis])
+            log[np.isnan(log)] = 0
+            log = np.sum(log)
+            bic = -2 * log + 3 * 4**M * np.log(np.sum(M_count))
+        S = [bic] + S
+        M_count = np.sum(M_count, axis=1)
+        M -= 1
+    return S.index(min(S))
+
+def all_BIC(sequence_list, K, Num_Threads, Reverse, P_dir):
+    order = []
+    for seqfile in sequence_list:
+        order.append(BIC(seqfile, K, Num_Threads, Reverse, P_dir))
+    return order
 
 def get_d2star_f(seqfile, M, K, Num_Threads, Reverse, P_dir):
     seqfile_f_p = os.path.join(P_dir, os.path.basename(seqfile) + '.%s_M%d_K%d_d2star_f.npy'%('R' if Reverse else 'NR', M-1, K))
