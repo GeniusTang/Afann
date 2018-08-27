@@ -26,7 +26,7 @@ Mac setup:
 MACOSX_DEPLOYMENT_TARGET=10.9 CC=g++ python setup.py install --install-platlib=./src/
 ```
 
-## Runing the tests 
+## Runing the tests:
 ### Example1: 
 Calculate pairwise d2star,d2shepp,CVtree,Ma,Eu,d2 distances among all samples listed in test_file.txt, using kmer length 5, Markovian order 0. 
 * -r: Consider reverse complement of kmers. 
@@ -47,16 +47,16 @@ Calculate the Markovian orders of all sequences listed in test_file.txt.
 ```
 python alignmentfree.py -r --BIC -k 5 -f test_file.txt -t 8 -d test_count/ -o test_result/test
 ```
-## Usage
+## Usage:
 ```
-python alignmentfree.py [-h] -a METHOD -k K [-m M] [-f FILENAME]
+usage: alignmentfree.py [-h] [-a METHOD] -k K [-m M] [-f FILENAME]
                         [-f1 FILENAME1] [-f2 FILENAME2] [-d DIR] [-o OUTPUT]
-                        [-t THREADS] [-r]
+                        [-t THREADS] [-r] [--BIC]
 ```
 
 Optional arguments:
 ```
-  -h, --help     show this help message and exit
+-h, --help     show this help message and exit
   -a METHOD      A list of alignment-free method, separated by comma:
                  d2star,d2shepp,CVtree,Ma,Eu,d2
   -k K           Kmer length
@@ -73,4 +73,5 @@ Optional arguments:
   -o OUTPUT      Prefix of output (defualt: Current directory)
   -t THREADS     Number of threads
   -r             Count the reverse complement of kmers (default: False)
+  --BIC          Use BIC to estimate the Markovian orders of sequences
 ```
