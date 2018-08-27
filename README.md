@@ -56,7 +56,7 @@ usage: alignmentfree.py [-h] [-a METHOD] -k K [-m M] [-f FILENAME]
 
 Optional arguments:
 ```
--h, --help     show this help message and exit
+  -h, --help     show this help message and exit
   -a METHOD      A list of alignment-free method, separated by comma:
                  d2star,d2shepp,CVtree,Ma,Eu,d2
   -k K           Kmer length
