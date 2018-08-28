@@ -153,6 +153,7 @@ def get_d2star_all_f(sequence_list, M, K, Num_Threads, Reverse, P_dir):
     return f_matrix
 
 def get_CVTree_f(seqfile, M, K, Num_Threads, Reverse, P_dir):
+    M = K - 1
     seqfile_f_p = os.path.join(P_dir, os.path.basename(seqfile) + '.%s_M%d_K%d_CVTree_f.npy'%('R' if Reverse else 'NR', M-1, K))
     if os.path.exists(seqfile_f_p):
         CVTree_f = np.load(seqfile_f_p)
