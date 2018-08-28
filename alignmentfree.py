@@ -71,11 +71,11 @@ def get_matrix_group(a_method):
         else:
             return method.d2_matrix_groupwise
 
-def write_phylip(output, a_method, sequence_list, matrix):
+def write_phy(output, a_method, sequence_list, matrix):
     if output.endswith('/'):
-        filename = output + a_method + '.' + 'phylip'
+        filename = output + a_method + '.' + 'phy'
     else:
-        filename = '.'.join([output, a_method, 'phylip'])
+        filename = '.'.join([output, a_method, 'phy'])
     num = len(sequence_list)
     with open(filename, 'wt') as f:
         f.write('%d\n'%num)
@@ -85,11 +85,11 @@ def write_phylip(output, a_method, sequence_list, matrix):
                 f.write('\t%.4f'%value)
             f.write('\n')
 
-def write_plain(output, a_method, sequence_list, matrix):
+def write_tsv(output, a_method, sequence_list, matrix):
     if output.endswith('/'):
-        filename = output + a_method + '.' + 'plain'
+        filename = output + a_method + '.' + 'tsv'
     else:
-        filename = '.'.join([output, a_method, 'plain'])
+        filename = '.'.join([output, a_method, 'tsv'])
     num = len(sequence_list)
     with open(filename, 'wt') as f:
         for i in range(num):
@@ -99,11 +99,11 @@ def write_plain(output, a_method, sequence_list, matrix):
                 if i != j:
                     f.write('%s\t%s\t%.4f\n'%(seq_1, seq_2, matrix[i][j]))
 
-def write_phylip_group(output, a_method, sequence_list_1, sequence_list_2, matrix):
+def write_phy_group(output, a_method, sequence_list_1, sequence_list_2, matrix):
     if output.endswith('/'):
-        filename = output + a_method + '.' + 'phylip'
+        filename = output + a_method + '.' + 'phy'
     else:
-        filename = '.'.join([output, a_method, 'phylip'])
+        filename = '.'.join([output, a_method, 'phy'])
     num1 = len(sequence_list_1)
     num2 = len(sequence_list_2)
     with open(filename, 'wt') as f:
@@ -117,11 +117,11 @@ def write_phylip_group(output, a_method, sequence_list_1, sequence_list_2, matri
                 f.write('\t%.4f'%value)
             f.write('\n')
 
-def write_plain_group(output, a_method, sequence_list_1, sequence_list_2, matrix):
+def write_tsv_group(output, a_method, sequence_list_1, sequence_list_2, matrix):
     if output.endswith('/'):
-        filename = output + a_method + '.' + 'plain'
+        filename = output + a_method + '.' + 'tsv'
     else:
-        filename = '.'.join([output, a_method, 'plain'])
+        filename = '.'.join([output, a_method, 'tsv'])
     num1 = len(sequence_list_1)
     with open(filename, 'wt') as f:
         for i in range(num1):
@@ -179,15 +179,15 @@ if __name__ == "__main__":
             for a_method in methods:
                 print('Calculating %s.'%a_method)
                 matrix = get_matrix(a_method)(sequence_list, M, K, Num_Threads, Reverse, P_dir)
-                write_plain(output, a_method, sequence_list, matrix)
-                write_phylip(output, a_method, sequence_list, matrix)
+                write_tsv(output, a_method, sequence_list, matrix)
+                write_phy(output, a_method, sequence_list, matrix)
         elif not filename and filename1 and filename2:
             sequence_list_1 = get_sequence_from_file(filename1)
             sequence_list_2 = get_sequence_from_file(filename2)
             for a_method in methods:
                 print('Calculating %s.'%a_method)
                 matrix = get_matrix_group(a_method)(sequence_list_1, sequence_list_2, M, K, Num_Threads, Reverse, P_dir)
-                write_phylip_group(output, a_method, sequence_list_1, sequence_list_2, matrix)
-                write_plain_group(output, a_method, sequence_list_1, sequence_list_2, matrix)
+                write_phy_group(output, a_method, sequence_list_1, sequence_list_2, matrix)
+                write_tsv_group(output, a_method, sequence_list_1, sequence_list_2, matrix)
         else:
             print('Cannot use -f, -f1, -f2 at the same time!')
