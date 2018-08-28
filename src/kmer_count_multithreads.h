@@ -20,7 +20,7 @@ int revcomp(int num, int K){
     int shift;
     for (int i=0; i<K; i++){
         shift = 2 * (K-i-1);
-        nuc_rc += (3 - (num>>shift)&3) * pow(4, i);
+        nuc_rc += (3 - ((num>>shift)&3)) * pow(4, i);
     }
     return nuc_rc;
 }
@@ -35,7 +35,7 @@ void count_one_read(int id, int K, std::string one_read, std::vector<std::atomic
     int rev = 0;
     for (int i=0;i<length;i++){ 
         nuc = one_read[i];
-        if (nuc == 'N'){
+        if (nuc == 'N' || nuc == 'n'){
             num = 0;
 	    rev = 0;
             j = 0;
@@ -80,7 +80,7 @@ void count_one_read_M_K(int id, int M, int K, std::string one_read, std::vector<
     }
     for (;i<length;i++){
         nuc = one_read[i];
-        if (nuc == 'N'){
+        if (nuc == 'N' || nuc == 'n'){
             num_K = 0;
 	    rev_K = 0;
             j = 0;
