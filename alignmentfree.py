@@ -163,10 +163,14 @@ if __name__ == "__main__":
     P_dir = args.Dir
     if P_dir == 'None':
         print('Warning: Using -d option to save kmer counts in a directory can save you a lot of counting time.')
+    else:
+        os.system('mkdir -p %s'%P_dir)
     Num_Threads = args.threads
     output = args.output
     if output == './':
         print('Warning: Using -o option to change output directory and prefix. Otherwise, output will be generated in the current directory.')
+    else:
+        os.system('mkdir -p %s'%os.path.dirname(output))
     if BIC:
         sequence_list = get_sequence_from_file(filename)
         print('Calculating Markovian order.')
