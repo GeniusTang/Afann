@@ -7,7 +7,6 @@
 #include <thread>
 #include <unistd.h>
 #include <atomic>
-#include <time.h>
 
 
 std::atomic<int> X;
@@ -38,9 +37,6 @@ void count_one_read(int id, int K, std::string one_read, std::vector<std::atomic
     char nuc;
     int rev = 0;
     for (int i=0;i<length;i++){ 
-        if (!::VALID) {
-            return;
-        }
         nuc = one_read[i];
         search = nuc2num.find(nuc);
         if (search == nuc2num.end()){
@@ -102,9 +98,6 @@ void count_one_read_M_K(int id, int M, int K, std::string one_read, std::vector<
 	M_start = K-M;
     }
     for (;i<length;i++){
-        if (!::VALID) {
-            return;
-        }
         nuc = one_read[i];
         search = nuc2num.find(nuc);
         if (search == nuc2num.end()){
@@ -179,9 +172,8 @@ std::vector<std::atomic<int>> count(std::string filename, int K, int Num_Threads
     }
     p.push([one_read, K, Reverse, &count_array](int id){count_one_read(id, K, one_read, count_array, Reverse);});
     fs.close();
-    if (!::VALID) {
-        count_array[0] = -1;
-    }
+    p.stop(true);
+    if (!::VALID)  count_array[0] = -1;
     return count_array;
 }
 
@@ -213,6 +205,7 @@ std::vector<std::atomic<int>> count_M_K(std::string filename, int M, int K, int 
     }
     p.push([one_read, M, K, Reverse, &count_array](int id){count_one_read_M_K(id, M, K, one_read, count_array, Reverse);});
     fs.close();
+    p.stop(true);
     if (!::VALID) count_array[0] = -1;
     return count_array;
 }
