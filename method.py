@@ -26,6 +26,12 @@ def rev_count(count, K):
         new_count[i] = count[i] + count[rev]
     return new_count
 
+def check_count(seqfile, K_count):
+    if K_count[0] == -1:
+        raise Exception('Sequence file %s is not in the correct fasta format!'%seqfile)
+    if np.sum(K_count) == 0:
+        raise Exception('Sequence file %s is empty!'%seqfile)
+
 def count_pickle(seqfile, K, Reverse, P_dir):
     seq_count_p = os.path.join(P_dir, os.path.basename(seqfile) + '.%s_%d_cnt.npy'%('R' if Reverse else 'NR', K))
     return seq_count_p
@@ -37,11 +43,13 @@ def get_K(seqfile, K, Num_Threads, Reverse, P_dir):
         K_count = np.load(seq_count_K_p)
     else:
         print('Counting kmers of %s.'%seqfile)
-        if K>= 6:
+        if not Reverse or K>= 6:
             K_count = np.copy(kmer_count(seqfile, K, Num_Threads, Reverse))
+            check_count(seqfile, K_count)
         else:
             K_count = np.copy(kmer_count(seqfile, K, Num_Threads, False))
-            K_count = rev_count(K_count, K)
+            check_count(seqfile, K_count)
+            K_count = rev_count(K_count, K)   
         if P_dir != 'None':
             np.save(seq_count_K_p, K_count)
     return K_count
@@ -56,10 +64,13 @@ def get_M_K(seqfile, M, K, Num_Threads, Reverse, P_dir):
         print('Counting kmers of %s.'%seqfile)
         if not Reverse or M>=6:
             count = np.copy(kmer_count_m_k(seqfile, M, K, Num_Threads, Reverse))
+            print(count[0])
+            check_count(seqfile, count) 
             M_count = count[:4**M]
             K_count = count[4**M:]
         else:
             M_count = np.copy(kmer_count(seqfile, M, Num_Threads, False))
+            check_count(seqfile, M_count)
             M_count = rev_count(M_count, M)
             if K>= 6:
                 K_count = np.copy(kmer_count(seqfile, K, Num_Threads, Reverse))

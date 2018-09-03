@@ -9,9 +9,9 @@
 static PyObject *kmer_count(PyObject *self, PyObject *args)
 {
     char* filename;
-    int K=0;
     int NumThreads=1;
     bool Reverse=false;
+    int K=0;
     if (!PyArg_ParseTuple(args, "siii", &filename, &K, &NumThreads, &Reverse))
         return NULL;
     npy_intp SIZE = pow(4, K);
