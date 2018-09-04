@@ -20,6 +20,20 @@ static PyObject *kmer_count(PyObject *self, PyObject *args)
     return PyArray_SimpleNewFromData(1, &SIZE, NPY_INT32, static_cast<void*>(count_array.data()));
 }
 
+static PyObject *kmer_count_seq(PyObject *self, PyObject *args)
+{
+    char* sequence;
+    int K=0;
+    int NumThreads=1;
+    bool Reverse=false;
+    if (!PyArg_ParseTuple(args, "siii", &sequence, &K, &NumThreads, &Reverse))
+        return NULL;
+    npy_intp SIZE = pow(4, K);
+    static std::vector<std::atomic<int>> count_array;
+    count_array = count_seq(sequence, K, NumThreads, Reverse);
+    return PyArray_SimpleNewFromData(1, &SIZE, NPY_INT32, static_cast<void*>(count_array.data()));
+}
+
 static PyObject *kmer_count_m_k(PyObject *self, PyObject *args)
 {
     char* filename;
@@ -35,9 +49,26 @@ static PyObject *kmer_count_m_k(PyObject *self, PyObject *args)
     return PyArray_SimpleNewFromData(1, &SIZE, NPY_INT32, static_cast<void*>(count_array.data()));
 }
 
+static PyObject *kmer_count_m_k_seq(PyObject *self, PyObject *args)
+{
+    char* sequence;
+    int K=0;
+    int M=0;
+    int NumThreads=1;
+    bool Reverse=false;
+    if (!PyArg_ParseTuple(args, "siiii", &sequence, &M, &K, &NumThreads, &Reverse))
+        return NULL;
+    npy_intp SIZE = pow(4, K) + pow(4, M);
+    static std::vector<std::atomic<int>> count_array;
+    count_array = count_M_K_seq(sequence, M, K, NumThreads, Reverse);
+    return PyArray_SimpleNewFromData(1, &SIZE, NPY_INT32, static_cast<void*>(count_array.data()));
+}
+
 static PyMethodDef module_methods[] = {
     {"kmer_count_m_k", kmer_count_m_k, METH_VARARGS, ""},
+    {"kmer_count_m_k_seq", kmer_count_m_k_seq, METH_VARARGS, ""},
     {"kmer_count", kmer_count, METH_VARARGS, ""},
+    {"kmer_count_seq", kmer_count_seq, METH_VARARGS, ""},
     {NULL, NULL, 0, NULL}
 };
 

@@ -177,6 +177,24 @@ std::vector<std::atomic<int>> count(std::string filename, int K, int Num_Threads
     return count_array;
 }
 
+std::vector<std::atomic<int>> count_seq(std::string sequence, int K, int Num_Threads, bool Reverse) {
+    const int SIZE = pow(4, K);
+    const unsigned int READ_LENGTH = 5000;
+    std::vector<std::atomic<int>> count_array(SIZE);
+    ctpl::thread_pool p(Num_Threads);
+    std::string temp;
+    for (unsigned i = 0;i < sequence.length(); i += (READ_LENGTH-K+1)) {
+        if (::VALID) {
+            temp = sequence.substr(i, READ_LENGTH);
+            p.push([temp, K, Reverse, &count_array](int id){count_one_read(id, K, temp, count_array, Reverse);});
+        }
+        else break;
+    }
+    p.stop(true);
+    if (!::VALID) count_array[0] = -1;
+    return count_array;
+}
+
 std::vector<std::atomic<int>> count_M_K(std::string filename, int M, int K, int Num_Threads, bool Reverse) {
     const int SIZE = pow(4, M) + pow(4, K);
     const unsigned int READ_LENGTH = 5000;
@@ -209,3 +227,23 @@ std::vector<std::atomic<int>> count_M_K(std::string filename, int M, int K, int 
     if (!::VALID) count_array[0] = -1;
     return count_array;
 }
+
+std::vector<std::atomic<int>> count_M_K_seq(std::string sequence, int M, int K, int Num_Threads, bool Reverse) {
+    const int SIZE = pow(4, M) + pow(4, K);
+    const unsigned int READ_LENGTH = 5000;
+    std::vector<std::atomic<int>> count_array(SIZE);
+    ctpl::thread_pool p(Num_Threads);
+    std::string temp;
+    for (unsigned i = 0;i < sequence.length(); i += (READ_LENGTH-K+1)) {
+        if (::VALID) { 
+            if (i==0) temp = sequence.substr(i, READ_LENGTH);
+            else temp = "$" + sequence.substr(i, READ_LENGTH);
+            p.push([temp, M, K, Reverse, &count_array](int id){count_one_read_M_K(id, M, K, temp, count_array, Reverse);}); 
+        }
+        else break;
+    }
+    p.stop(true);
+    if (!::VALID) count_array[0] = -1;
+    return count_array;
+}
+  
