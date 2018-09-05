@@ -1,5 +1,7 @@
 from src._count import kmer_count
+from src._count import kmer_count_seq
 from src._count import kmer_count_m_k
+from src._count import kmer_count_m_k_seq
 from scipy.spatial.distance import cosine
 from sklearn.metrics.pairwise import cosine_similarity
 from scipy import stats
@@ -36,25 +38,49 @@ def count_pickle(seqfile, K, Reverse, P_dir):
     seq_count_p = os.path.join(P_dir, os.path.basename(seqfile) + '.%s_%d_cnt.npy'%('R' if Reverse else 'NR', K))
     return seq_count_p
 
+def get_sequences(seqfile):
+    seq_old_name_list = []
+    seq_new_name_list = []
+    sequence_list = []
+    sequence = ''
+    with open(seqfile) as f:
+        for line in f.readlines():
+            if line.startswith('>'):
+                seq_old_name = line.strip()[1:]
+                seq_new_name = seq_old_name.replace('/', '_slash_').replace(' ', '_blank_')
+                seq_old_name_list.append(seq_old_name)
+                seq_new_name_list.append(seq_new_name)
+                if sequence:
+                    sequence_list.append(sequence)
+            else:
+                sequence += line.strip()
+    sequence_list.append(sequence)
+    return seq_old_name_list, seq_new_name_list, sequence_list
 
-def get_K(seqfile, K, Num_Threads, Reverse, P_dir):
+def get_K(seqfile, K, Num_Threads, Reverse, P_dir, sequence = '', from_seq=False):
     seq_count_K_p = count_pickle(seqfile, K, Reverse, P_dir)
     if os.path.exists(seq_count_K_p):
         K_count = np.load(seq_count_K_p)
     else:
         print('Counting kmers of %s.'%seqfile)
         if not Reverse or K>= 6:
-            K_count = np.copy(kmer_count(seqfile, K, Num_Threads, Reverse))
+            if from_seq:
+                K_count = np.copy(kmer_count_seq(sequence, K, Num_Threads, Reverse))
+            else:
+                K_count = np.copy(kmer_count(seqfile, K, Num_Threads, Reverse))
             check_count(seqfile, K_count)
         else:
-            K_count = np.copy(kmer_count(seqfile, K, Num_Threads, False))
+            if from_seq:
+                K_count = np.copy(kmer_count_seq(sequence, K, Num_Threads, False))
+            else:
+                K_count = np.copy(kmer_count(seqfile, K, Num_Threads, False))
             check_count(seqfile, K_count)
             K_count = rev_count(K_count, K)   
         if P_dir != 'None':
             np.save(seq_count_K_p, K_count)
     return K_count
 
-def get_M_K(seqfile, M, K, Num_Threads, Reverse, P_dir):
+def get_M_K(seqfile, M, K, Num_Threads, Reverse, P_dir, sequence = '', from_seq=False):
     seq_count_M_p = count_pickle(seqfile, M, Reverse, P_dir)
     seq_count_K_p = count_pickle(seqfile, K, Reverse, P_dir)
     if os.path.exists(seq_count_M_p) and os.path.exists(seq_count_K_p):
@@ -63,19 +89,30 @@ def get_M_K(seqfile, M, K, Num_Threads, Reverse, P_dir):
     else:
         print('Counting kmers of %s.'%seqfile)
         if not Reverse or M>=6:
-            count = np.copy(kmer_count_m_k(seqfile, M, K, Num_Threads, Reverse))
-            print(count[0])
+            if from_seq:
+                count = np.copy(kmer_count_m_k_seq(sequence, M, K, Num_Threads, Reverse))
+            else:
+                count = np.copy(kmer_count_m_k(seqfile, M, K, Num_Threads, Reverse))
             check_count(seqfile, count) 
             M_count = count[:4**M]
             K_count = count[4**M:]
         else:
-            M_count = np.copy(kmer_count(seqfile, M, Num_Threads, False))
+            if from_seq:
+                M_count = np.copy(kmer_count_seq(sequence, M, Num_Threads, False))
+            else:
+                M_count = np.copy(kmer_count(seqfile, M, Num_Threads, False))
             check_count(seqfile, M_count)
             M_count = rev_count(M_count, M)
             if K>= 6:
-                K_count = np.copy(kmer_count(seqfile, K, Num_Threads, Reverse))
+                if from_seq:
+                    K_count = np.copy(kmer_count_seq(sequence, K, Num_Threads, Reverse))
+                else:
+                    K_count = np.copy(kmer_count(seqfile, K, Num_Threads, Reverse))
             else:
-                K_count = np.copy(kmer_count(seqfile, K, Num_Threads, False))
+                if from_seq:
+                    K_count = np.copy(kmer_count_seq(sequence, K, Num_Threads, False)) 
+                else:
+                    K_count = np.copy(kmer_count(seqfile, K, Num_Threads, False))
                 K_count = rev_count(K_count, K)
         if P_dir != 'None':
             np.save(seq_count_M_p, M_count)
@@ -91,8 +128,8 @@ def get_transition(count_array):
         transition_array[np.isnan(transition_array)] = 0
     return transition_array
 
-def get_expect(seqfile, M, K, Num_Threads, Reverse, P_dir):
-    M_count, K_count = get_M_K(seqfile, M, K, Num_Threads, Reverse, P_dir)
+def get_expect(seqfile, M, K, Num_Threads, Reverse, P_dir, sequence = '', from_seq=False):
+    M_count, K_count = get_M_K(seqfile, M, K, Num_Threads, Reverse, P_dir, sequence, from_seq)
     seqfile_e_p = os.path.join(P_dir, os.path.basename(seqfile) + '.%s_M%d_K%d_e.npy'%('R' if Reverse else 'NR', M-1, K))
     if os.path.exists(seqfile_e_p):
         expect = np.load(seqfile_e_p)
@@ -122,9 +159,9 @@ def get_expect_reverse(seqfile, M, K, Num_Threads, P_dir):
         expect = (expect[:,np.newaxis] * trans).flatten()
     return K_count, expect
 
-def BIC(seqfile, K, Num_Threads, Reverse, P_dir):
+def BIC(seqfile, K, Num_Threads, Reverse, P_dir, sequence = '', from_seq=False):
     M = K - 2
-    M_count = get_K(seqfile, M+1, Num_Threads, Reverse, P_dir)
+    M_count = get_K(seqfile, M+1, Num_Threads, Reverse, P_dir, sequence, from_seq)
     S = []
     for i in range(M+1):
         M_count = M_count.reshape(4**M, 4)
@@ -138,18 +175,22 @@ def BIC(seqfile, K, Num_Threads, Reverse, P_dir):
         M -= 1
     return S.index(min(S))
 
-def all_BIC(sequence_list, K, Num_Threads, Reverse, P_dir):
+def all_BIC(seqname_list, K, Num_Threads, Reverse, P_dir, sequence_list = [], from_seq=False):
     order = []
-    for seqfile in sequence_list:
-        order.append(BIC(seqfile, K, Num_Threads, Reverse, P_dir))
+    if from_seq:
+        for seqname, sequence in zip(seqname_list, sequence_list):
+            order.append(BIC(seqname, K, Num_Threads, Reverse, P_dir, sequence, from_seq))
+    else:
+        for seqfile in seqname_list:
+            order.append(BIC(seqfile, K, Num_Threads, Reverse, P_dir))
     return order
 
-def get_d2star_f(seqfile, M, K, Num_Threads, Reverse, P_dir):
+def get_d2star_f(seqfile, M, K, Num_Threads, Reverse, P_dir, sequence = '', from_seq=False):
     seqfile_f_p = os.path.join(P_dir, os.path.basename(seqfile) + '.%s_M%d_K%d_d2star_f.npy'%('R' if Reverse else 'NR', M-1, K))
     if os.path.exists(seqfile_f_p):
         d2star_f = np.load(seqfile_f_p)
     else:
-        K_count, expect = get_expect(seqfile, M, K, Num_Threads, Reverse, P_dir)
+        K_count, expect = get_expect(seqfile, M, K, Num_Threads, Reverse, P_dir, sequence, from_seq)
         with np.errstate(divide='ignore', invalid='ignore'):
             d2star_f = (K_count-expect)/np.sqrt(expect)
             d2star_f[np.isnan(d2star_f)]=0
@@ -157,19 +198,21 @@ def get_d2star_f(seqfile, M, K, Num_Threads, Reverse, P_dir):
             np.save(seqfile_f_p, d2star_f)
     return d2star_f
 
+'''
 def get_d2star_all_f(sequence_list, M, K, Num_Threads, Reverse, P_dir):
     f_matrix = np.ones((len(sequence_list), 4**K))
     for i, seqfile in enumerate(sequence_list):
         f_matrix[i] = get_d2star_f(seqfile, M, K, Num_Threads, Reverse, P_dir)
     return f_matrix
+'''
 
-def get_CVTree_f(seqfile, M, K, Num_Threads, Reverse, P_dir):
+def get_CVTree_f(seqfile, M, K, Num_Threads, Reverse, P_dir, sequence = '', from_seq=False):
     M = K - 1
     seqfile_f_p = os.path.join(P_dir, os.path.basename(seqfile) + '.%s_M%d_K%d_CVTree_f.npy'%('R' if Reverse else 'NR', M-1, K))
     if os.path.exists(seqfile_f_p):
         CVTree_f = np.load(seqfile_f_p)
     else:
-        K_count, expect = get_expect(seqfile, M, K, Num_Threads, Reverse, P_dir)
+        K_count, expect = get_expect(seqfile, M, K, Num_Threads, Reverse, P_dir, sequence, from_seq)
         with np.errstate(divide='ignore', invalid='ignore'):
             CVTree_f = (K_count-expect)/expect
             CVTree_f[np.isnan(CVTree_f)]=0
@@ -177,46 +220,56 @@ def get_CVTree_f(seqfile, M, K, Num_Threads, Reverse, P_dir):
             np.save(seqfile_f_p, CVTree_f)
     return CVTree_f   
 
+'''
 def get_all_K(sequence_list, M, K, Num_Threads, Reverse, P_dir):
     K_matrix = np.ones((len(sequence_list), 4**K))
     for i, seqfile in enumerate(sequence_list):
         M_count, K_count = get_M_K(seqfile, M, K, Num_Threads, Reverse, P_dir)
         K_matrix[i] = K_count/np.sum(K_count)
     return K_matrix
+'''
 
-def Ma(seqfile_1, seqfile_2, M, K, Num_Threads, Reverse, P_dir):
-    a_K = get_K(seqfile_1, K, Num_Threads, Reverse, P_dir)    
-    b_K = get_K(seqfile_2, K, Num_Threads, Reverse, P_dir)    
+def Ma(seqfile_1, seqfile_2, M, K, Num_Threads, Reverse, P_dir, sequence_1 = '', sequence_2 = '', from_seq=False):
+    a_K = get_K(seqfile_1, K, Num_Threads, Reverse, P_dir, sequence_1, from_seq)
+    b_K = get_K(seqfile_2, K, Num_Threads, Reverse, P_dir, sequence_2, from_seq) 
     diff = a_K/np.sum(a_K) - b_K/np.sum(b_K)
     return LA.norm(diff, 1) 
 
-def Eu(seqfile_1, seqfile_2, M, K, Num_Threads, Reverse, P_dir):
-    a_K = get_K(seqfile_1, K, Num_Threads, Reverse, P_dir)
-    b_K = get_K(seqfile_2, K, Num_Threads, Reverse, P_dir)
+def Eu(seqfile_1, seqfile_2, M, K, Num_Threads, Reverse, P_dir, sequence_1 = '', sequence_2 = '', from_seq=False):
+    a_K = get_K(seqfile_1, K, Num_Threads, Reverse, P_dir, sequence_1, from_seq)
+    b_K = get_K(seqfile_2, K, Num_Threads, Reverse, P_dir, sequence_2, from_seq)
     diff = a_K/np.sum(a_K) - b_K/np.sum(b_K)
     return LA.norm(diff)
 
-def d2(seqfile_1, seqfile_2, M, K, Num_Threads, Reverse, P_dir):
-    a_K = get_K(seqfile_1, K, Num_Threads, Reverse, P_dir)
-    b_K = get_K(seqfile_2, K, Num_Threads, Reverse, P_dir)
+def d2(seqfile_1, seqfile_2, M, K, Num_Threads, Reverse, P_dir, sequence_1 = '', sequence_2 = '', from_seq=False):
+    a_K = get_K(seqfile_1, K, Num_Threads, Reverse, P_dir, sequence_1, from_seq)
+    b_K = get_K(seqfile_2, K, Num_Threads, Reverse, P_dir, sequence_2, from_seq)
     return 0.5 * cosine(a_K/np.sum(a_K), b_K/np.sum(b_K))
 
-def d2star(seqfile_1, seqfile_2, M, K, Num_Threads, Reverse, P_dir):
-    a_f = get_d2star_f(seqfile_1, M, K, Num_Threads, Reverse, P_dir)
-    b_f = get_d2star_f(seqfile_2, M, K, Num_Threads, Reverse, P_dir)
+def d2star(seqfile_1, seqfile_2, M, K, Num_Threads, Reverse, P_dir, sequence_1 = '', sequence_2 = '', from_seq=False):
+    if from_seq:
+        a_f = get_d2star_f(seqfile_1, M, K, Num_Threads, Reverse, P_dir, sequence_1, from_seq)
+        b_f = get_d2star_f(seqfile_2, M, K, Num_Threads, Reverse, P_dir, sequence_2, from_seq)
+    else:
+        a_f = get_d2star_f(seqfile_1, M, K, Num_Threads, Reverse, P_dir)
+        b_f = get_d2star_f(seqfile_2, M, K, Num_Threads, Reverse, P_dir)
     return 0.5 * cosine(a_f, b_f)
 
-def CVTree(seqfile_1, seqfile_2, M, K, Num_Threads, Reverse, P_dir):
-    a_f = get_CVTree_f(seqfile_1, M, K, Num_Threads, Reverse, P_dir)
-    b_f = get_CVTree_f(seqfile_2, M, K, Num_Threads, Reverse, P_dir)
+def CVTree(seqfile_1, seqfile_2, M, K, Num_Threads, Reverse, P_dir, sequence_1 = '', sequence_2 = '', from_seq=False):
+    if from_seq:
+        a_f = get_CVTree_f(seqfile_1, M, K, Num_Threads, Reverse, P_dir, sequence_1, from_seq)
+        b_f = get_CVTree_f(seqfile_2, M, K, Num_Threads, Reverse, P_dir, sequence_2, from_seq)
+    else:
+        a_f = get_CVTree_f(seqfile_1, M, K, Num_Threads, Reverse, P_dir)
+        b_f = get_CVTree_f(seqfile_2, M, K, Num_Threads, Reverse, P_dir)
     return 0.5 * cosine(a_f, b_f)
 
-def d2shepp(seqfile_1, seqfile_2, M, K, Num_Threads, Reverse, P_dir):
-    a_K_count, a_expect = get_expect(seqfile_1, M, K, Num_Threads, Reverse, P_dir)
+def d2shepp(seqfile_1, seqfile_2, M, K, Num_Threads, Reverse, P_dir, sequence_1 = '', sequence_2 = '', from_seq=False):
+    a_K_count, a_expect = get_expect(seqfile_1, M, K, Num_Threads, Reverse, P_dir, sequence_1, from_seq)
     a_diff = a_K_count - a_expect
     del a_K_count
     del a_expect
-    b_K_count, b_expect = get_expect(seqfile_2, M, K, Num_Threads, Reverse, P_dir)
+    b_K_count, b_expect = get_expect(seqfile_2, M, K, Num_Threads, Reverse, P_dir, sequence_2, from_seq)
     b_diff = b_K_count - b_expect
     del b_K_count
     del b_expect
@@ -250,14 +303,24 @@ def d2star_matrix(f1_matrix, f2_matrix):
     np.fill_diagonal(d2star_matrix, 0)
     return d2star_matrix
 
-def dist_matrix_pairwise(sequence_list, M, K, Num_Threads, Reverse, P_dir, method):
-    N = len(sequence_list)
+def dist_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list = [], from_seq=False, method = None):
+    N = max(len(sequence_list), len(seqname_list))
     matrix = np.zeros((N, N))
+    sequence_1 = ''
+    sequence_2 = ''
+    seqfile_1 = ''
+    seqfile_2 = ''
     for i in range(N):
-        seqfile_1 = sequence_list[i]
+        if from_seq:
+            sequence_1 = sequence_list[i]
+        else:
+            seqfile_1 = seqname_list[i]
         for j in range(i+1, N):
-            seqfile_2 = sequence_list[j]
-            matrix[i][j] = method(seqfile_1, seqfile_2, M, K, Num_Threads, Reverse, P_dir)         
+            if from_seq:
+                sequence_2 = sequence_list[j]
+            else: 
+                seqfile_2 = seqname_list[j]
+            matrix[i][j] = method(seqfile_1, seqfile_2, M, K, Num_Threads, Reverse, P_dir, sequence_1, sequence_2, from_seq)
             matrix[j][i] = matrix[i][j]
     return matrix
 
