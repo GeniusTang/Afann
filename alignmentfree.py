@@ -9,7 +9,7 @@ import os
 import method
 import argparse
 
-Suffix = ['fna', 'fa', 'fasta']
+Suffix = ['.fna', '.fa', '.fasta']
 Alphabeta = ['A', 'C', 'G', 'T']
 Alpha_dict = dict(zip(Alphabeta, range(4)))
 
@@ -22,6 +22,13 @@ def shift(num, K, M, x):
     num = num >> ((K-M)*2 - 2*x)
     num &= mask
     return num
+
+def seqname_strip(seqname, from_seq):
+    if not from_seq:
+        seqname = os.path.basename(seqname)
+        for suffix in Suffix:
+            seqname = seqname.strip(suffix)
+    return seqname
 
 def get_sequence_from_file(filename):
     sequence_list = []
@@ -71,73 +78,80 @@ def get_matrix_group(a_method):
         else:
             return method.d2_matrix_groupwise
 
-def write_phy(output, a_method, sequence_list, matrix):
+def write_phy(output, a_method, seqname_list, matrix, from_seq):
     if output.endswith('/'):
         filename = output + a_method + '.' + 'phy'
     else:
         filename = '.'.join([output, a_method, 'phy'])
-    num = len(sequence_list)
+    num = len(seqname_list)
     with open(filename, 'wt') as f:
         f.write('%d\n'%num)
         for i in range(num):
-            f.write('.'.join(os.path.basename(sequence_list[i]).split('.')[:-1]))
+            seqname = seqname_strip(seqname_list[i], from_seq)
+            f.write(seqname)
             for value in matrix[i]:
                 f.write('\t%.4f'%value)
             f.write('\n')
 
-def write_tsv(output, a_method, sequence_list, matrix):
+def write_tsv(output, a_method, seqname_list, matrix, from_seq):
     if output.endswith('/'):
         filename = output + a_method + '.' + 'tsv'
     else:
         filename = '.'.join([output, a_method, 'tsv'])
-    num = len(sequence_list)
+    num = len(seqname_list)
     with open(filename, 'wt') as f:
         for i in range(num):
-            seq_1 = '.'.join(os.path.basename(sequence_list[i]).split('.')[:-1])
+            seq_1 = seqname_strip(seqname_list[i], from_seq)
             for j in np.argsort(matrix[i]):
-                seq_2 = '.'.join(os.path.basename(sequence_list[j]).split('.')[:-1])
+                seq_2 = seqname_strip(seqname_list[j], from_seq)
                 if i != j:
                     f.write('%s\t%s\t%.4f\n'%(seq_1, seq_2, matrix[i][j]))
 
-def write_phy_group(output, a_method, sequence_list_1, sequence_list_2, matrix):
+def write_phy_group(output, a_method, seqname_list_1, seqname_list_2, matrix, from_seq):
     if output.endswith('/'):
         filename = output + a_method + '.' + 'phy'
     else:
         filename = '.'.join([output, a_method, 'phy'])
-    num1 = len(sequence_list_1)
-    num2 = len(sequence_list_2)
+    num1 = len(seqname_list_1)
+    num2 = len(seqname_list_2)
     with open(filename, 'wt') as f:
         f.write('%d,%d\n'%(num1, num2))
         for j in range(num2):
-            f.write('\t'+'.'.join(os.path.basename(sequence_list_2[j]).split('.')[:-1])) 
+            f.write('\t'+'.'.join(seqname_strip(seqname_list_2[j], from_seq)))
         f.write('\n')
         for i in range(num1):
-            f.write('.'.join(os.path.basename(sequence_list_1[i]).split('.')[:-1]))
+            f.write(seqname_strip(seqname_list_1[i], from_seq))
             for value in matrix[i]:
                 f.write('\t%.4f'%value)
             f.write('\n')
 
-def write_tsv_group(output, a_method, sequence_list_1, sequence_list_2, matrix):
+def write_tsv_group(output, a_method, seqname_list_1, seqname_list_2, matrix, from_seq):
     if output.endswith('/'):
         filename = output + a_method + '.' + 'tsv'
     else:
         filename = '.'.join([output, a_method, 'tsv'])
-    num1 = len(sequence_list_1)
+    num1 = len(seqname_list_1)
     with open(filename, 'wt') as f:
         for i in range(num1):
-            seq_1 = '.'.join(os.path.basename(sequence_list_1[i]).split('.')[:-1])
+            seq_1 = seqname_strip(seqname_list_1[i], from_seq)
             for j in np.argsort(matrix[i]):
-                seq_2 = '.'.join(os.path.basename(sequence_list_2[j]).split('.')[:-1])
+                seq_2 = seqname_strip(seqname_list_2[j], from_seq)
                 f.write('%s\t%s\t%.4f\n'%(seq_1, seq_2, matrix[i][j]))
 
-def write_BIC(output, sequence_list, BIC_list):
+def write_BIC(output, seqname_list, BIC_list, from_seq):
+    print(seqname_list)
     if output.endswith('/'):
         filename = output + 'BIC'
     else:
         filename = '.'.join([output, 'BIC'])
     with open(filename, 'wt') as f:
-        for i in range(len(sequence_list)):
-            f.write('%s\t%d\n'%('.'.join(os.path.basename(sequence_list[i]).split('.')[:-1]), BIC_list[i]))
+        for i in range(len(seqname_list)):
+            seqname = seqname_list[i]
+            if not from_seq:
+                seqname = os.path.basename(seqname)
+                for suffix in Suffix:
+                    seqname = seqname.strip(suffix)
+            f.write('%s\t%d\n'%(seqname, BIC_list[i]))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Example: python alignmentfree.py -r -a d2star,d2shepp,CVtree -k 12 -m 10 -f filename -d dir -o output') 
@@ -145,8 +159,11 @@ if __name__ == "__main__":
     parser.add_argument('-k', dest='K', required = True, type = int, help='Kmer length')
     parser.add_argument('-m', dest='M', type = int, default=0, help='Markovian Order, required for d2star, d2shepp and CVtree')
     parser.add_argument('-f', dest='filename', help='A file that lists the paths of all samples, cannot be used together with -f1, -f2')
-    parser.add_argument('-f1', dest='filename1', help='A file that lists the paths of the first group of samples, must be used together with -f2, cannot be used together with -f')
-    parser.add_argument('-f2', dest='filename2', help='A file that lists the paths of the second group of samples, must be used together with -f1, cannot be used together with -f')
+    parser.add_argument('-s', dest='sequence_file', help='A fasta file that lists the sequences of all samples, cannot be used together with -f, -f1, -f2, -s1, -s2')
+    parser.add_argument('-f1', dest='filename1', help='A file that lists the paths of the first group of samples, must be used together with -f2, cannot be used together with -f, -s, -s1, -s2')
+    parser.add_argument('-f2', dest='filename2', help='A file that lists the paths of the second group of samples, must be used together with -f1, cannot be used together with -f, -s, -s1, -s2')
+    parser.add_argument('-s1', dest='sequence_file_1', help='A fasta file that lists the sequences of the first group of samples, must be used together with -s2, cannot be used together with -f, -f1, -f2, -s')
+    parser.add_argument('-s2', dest='sequence_file_2', help='A fasta file that lists the sequences of the second group of samples, must be used together with -s1, cannot be used together with -f, -f1, -f2, -s')
     parser.add_argument('-d', dest='Dir', default='None', help='A directory that saves kmer count')
     parser.add_argument('-o', dest='output', help='Prefix of output (defualt: Current directory)', default='./')
     parser.add_argument('-t', dest='threads', type = int, default=1, help='Number of threads')
@@ -158,9 +175,20 @@ if __name__ == "__main__":
     filename = args.filename
     filename1 = args.filename1
     filename2 = args.filename2
+    seqfile = args.sequence_file
+    seqfile1 = args.sequence_file_1
+    seqfile2 = args.sequence_file_2
+    if seqfile or (seqfile1 and seqfile2):
+        from_seq = True
+    else:
+        from_seq = False
     Reverse = args.reverse
     BIC = args.BIC
     P_dir = args.Dir
+    seqname_list = []
+    sequence_list = []
+    sequence_list_1 = []
+    sequence_list_2 = []
     if P_dir == 'None':
         print('Warning: Using -d option to save kmer counts in a directory can save you a lot of counting time.')
     else:
@@ -172,26 +200,42 @@ if __name__ == "__main__":
     else:
         os.system('mkdir -p %s'%os.path.dirname(output))
     if BIC:
-        sequence_list = get_sequence_from_file(filename)
+        if from_seq:
+            seqname_old_list, seqname_list, sequence_list = method.get_sequences(seqfile) 
+        else:
+            seqname_list = get_sequence_from_file(filename)
         print('Calculating Markovian order.')
-        BIC_list = method.all_BIC(sequence_list, K, Num_Threads, Reverse, P_dir)
-        write_BIC(output, sequence_list, BIC_list)
+        BIC_list = method.all_BIC(seqname_list, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq)
+        if from_seq:
+            write_BIC(output, seqname_old_list, BIC_list, from_seq)
+        else:
+            write_BIC(output, seqname_list, BIC_list, from_seq)
     else:
         methods = [x.strip().lower() for x in args.method.split(',')]
-        if filename and not filename1 and not filename2:
-            sequence_list = get_sequence_from_file(filename) 
+        if filename or seqfile:
+            if from_seq:
+                seqname_old_list, seqname_list, sequence_list = method.get_sequences(seqfile)
+            else:
+                seqname_list = get_sequence_from_file(filename)
             for a_method in methods:
                 print('Calculating %s.'%a_method)
-                matrix = get_matrix(a_method)(sequence_list, M, K, Num_Threads, Reverse, P_dir)
-                write_tsv(output, a_method, sequence_list, matrix)
-                write_phy(output, a_method, sequence_list, matrix)
-        elif not filename and filename1 and filename2:
-            sequence_list_1 = get_sequence_from_file(filename1)
-            sequence_list_2 = get_sequence_from_file(filename2)
+                matrix = get_matrix(a_method)(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq)
+                if from_seq:
+                    seqname_list = seqname_old_list
+                write_tsv(output, a_method, seqname_list, matrix, from_seq)
+                write_phy(output, a_method, seqname_list, matrix, from_seq)
+        else: 
+            if from_seq:
+                seqname_old_list_1, seqname_list_1, sequence_list_1 = method.get_sequences(seqfile1)
+                seqname_old_list_2, seqname_list_2, sequence_list_2 = method.get_sequences(seqfile2)
+            else:
+                seqname_list_1 = get_sequence_from_file(filename1)
+                seqname_list_2 = get_sequence_from_file(filename2)
             for a_method in methods:
                 print('Calculating %s.'%a_method)
-                matrix = get_matrix_group(a_method)(sequence_list_1, sequence_list_2, M, K, Num_Threads, Reverse, P_dir)
-                write_phy_group(output, a_method, sequence_list_1, sequence_list_2, matrix)
-                write_tsv_group(output, a_method, sequence_list_1, sequence_list_2, matrix)
-        else:
-            print('Cannot use -f, -f1, -f2 at the same time!')
+                matrix = get_matrix_group(a_method)(seqname_list_1, seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_1, sequence_list_2, from_seq)
+                if from_seq:
+                    seqname_list_1 = seqname_old_list_1
+                    seqname_list_2 = seqname_old_list_2
+                write_phy_group(output, a_method, seqname_list_1, seqname_list_2, matrix, from_seq)
+                write_tsv_group(output, a_method, seqname_list_1, seqname_list_2, matrix, from_seq)

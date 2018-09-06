@@ -43,6 +43,7 @@ def get_sequences(seqfile):
     seq_new_name_list = []
     sequence_list = []
     sequence = ''
+    first = True
     with open(seqfile) as f:
         for line in f.readlines():
             if line.startswith('>'):
@@ -50,8 +51,11 @@ def get_sequences(seqfile):
                 seq_new_name = seq_old_name.replace('/', '_slash_').replace(' ', '_blank_')
                 seq_old_name_list.append(seq_old_name)
                 seq_new_name_list.append(seq_new_name)
-                if sequence:
+                if first:
+                    first = False
+                else:
                     sequence_list.append(sequence)
+                    sequence = ''
             else:
                 sequence += line.strip()
     sequence_list.append(sequence)
@@ -62,7 +66,7 @@ def get_K(seqfile, K, Num_Threads, Reverse, P_dir, sequence = '', from_seq=False
     if os.path.exists(seq_count_K_p):
         K_count = np.load(seq_count_K_p)
     else:
-        print('Counting kmers of %s.'%seqfile)
+        #print('Counting kmers of %s.'%seqfile)
         if not Reverse or K>= 6:
             if from_seq:
                 K_count = np.copy(kmer_count_seq(sequence, K, Num_Threads, Reverse))
@@ -117,7 +121,6 @@ def get_M_K(seqfile, M, K, Num_Threads, Reverse, P_dir, sequence = '', from_seq=
         if P_dir != 'None':
             np.save(seq_count_M_p, M_count)
             np.save(seq_count_K_p, K_count)
-        #print(np.sum(M_count), np.sum(K_count))
     return M_count, K_count
 
 def get_transition(count_array):
@@ -304,22 +307,18 @@ def d2star_matrix(f1_matrix, f2_matrix):
     return d2star_matrix
 
 def dist_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list = [], from_seq=False, method = None):
-    N = max(len(sequence_list), len(seqname_list))
+    N = len(seqname_list)
     matrix = np.zeros((N, N))
     sequence_1 = ''
     sequence_2 = ''
-    seqfile_1 = ''
-    seqfile_2 = ''
     for i in range(N):
         if from_seq:
             sequence_1 = sequence_list[i]
-        else:
-            seqfile_1 = seqname_list[i]
+        seqfile_1 = seqname_list[i]
         for j in range(i+1, N):
             if from_seq:
                 sequence_2 = sequence_list[j]
-            else: 
-                seqfile_2 = seqname_list[j]
+            seqfile_2 = seqname_list[j]
             matrix[i][j] = method(seqfile_1, seqfile_2, M, K, Num_Threads, Reverse, P_dir, sequence_1, sequence_2, from_seq)
             matrix[j][i] = matrix[i][j]
     return matrix
@@ -331,15 +330,21 @@ Ma_matrix_pairwise = partial(dist_matrix_pairwise, method = Ma)
 Eu_matrix_pairwise = partial(dist_matrix_pairwise, method = Eu)
 d2_matrix_pairwise = partial(dist_matrix_pairwise, method = d2)
  
-def dist_matrix_groupwise(sequence_list_1, sequence_list_2, M, K, Num_Threads, Reverse, P_dir, method):
-    N1 = len(sequence_list_1)
-    N2 = len(sequence_list_2)
+def dist_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_1 = [], sequence_list_2 = [], from_seq=False, method=None):
+    N1 = len(seqname_list_1)
+    N2 = len(seqname_list_2)
     matrix = np.zeros((N1, N2))
+    sequence_1 = ''
+    sequence_2 = ''
     for i in range(N1):
-        seqfile_1 = sequence_list_1[i]
+        if from_seq:
+            sequence_1 = sequence_list_1[i]
+        seqfile_1 = seqname_list_1[i]
         for j in range(N2):
-            seqfile_2 = sequence_list_2[j]
-            matrix[i][j] = method(seqfile_1, seqfile_2, M, K, Num_Threads, Reverse, P_dir)
+            if from_seq:
+                sequence_2 = sequence_list_2[j]
+            seqfile_2 = seqname_list_2[j]
+            matrix[i][j] = method(seqfile_1, seqfile_2, M, K, Num_Threads, Reverse, P_dir, sequence_1, sequence_2, from_seq)
     return matrix
 
 d2star_matrix_groupwise = partial(dist_matrix_groupwise, method = d2star)
