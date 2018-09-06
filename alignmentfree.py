@@ -188,7 +188,7 @@ if __name__ == "__main__":
     parser.add_argument('-a', dest='method', help='A list of alignment-free method, separated by comma: d2star,d2shepp,CVtree,Ma,Eu,d2')
     parser.add_argument('-k', dest='K', required = True, type = int, help='Kmer length')
     parser.add_argument('-m', dest='M', type = int, default=0, help='Markovian Order, required for d2star, d2shepp and CVtree')
-    parser.add_argument('-f', dest='filename', help='A file that lists the paths of all samples, cannot be used together with -f1, -f2')
+    parser.add_argument('-f', dest='filename', help='A file that lists the paths of all samples, cannot be used together with -f1, -f2, -s, -s1, -s2')
     parser.add_argument('-s', dest='sequence_file', help='A fasta file that lists the sequences of all samples, cannot be used together with -f, -f1, -f2, -s1, -s2')
     parser.add_argument('-f1', dest='filename1', help='A file that lists the paths of the first group of samples, must be used together with -f2, cannot be used together with -f, -s, -s1, -s2')
     parser.add_argument('-f2', dest='filename2', help='A file that lists the paths of the second group of samples, must be used together with -f1, cannot be used together with -f, -s, -s1, -s2')

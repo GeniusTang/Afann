@@ -70,7 +70,7 @@ Optional arguments:
   -m M                 Markovian Order, required for d2star, d2shepp and
                        CVtree
   -f FILENAME          A file that lists the paths of all samples, cannot be
-                       used together with -f1, -f2
+                       used together with -f1, -f2, -s, -s1, -s2
   -s SEQUENCE_FILE     A fasta file that lists the sequences of all samples,
                        cannot be used together with -f, -f1, -f2, -s1, -s2
   -f1 FILENAME1        A file that lists the paths of the first group of
