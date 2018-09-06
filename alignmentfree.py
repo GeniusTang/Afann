@@ -40,6 +40,36 @@ def get_sequence_from_file(filename):
                     sequence_list.append(line)
     return sequence_list 
    
+def check_arguments(K, M, filename, filename1, filename2, seqfile, seqfile1, seqfile2, P_dir, output, threads):
+    if K <= 0:
+        raise ValueError('Kmer length must be a positive integer!')
+    if M <= 0:
+        raise ValueError('Markovian order must be a non-negative integer!')
+    if M >= K:
+        raise ValueError('Markovian order cannot be greater than K-2!') 
+    if threads <= 0:
+        raise ValueError('Number of threads must be a positive integer!')
+    if filename and not (filename1 or filename2 or seqfile or seqfile1 or seqfile2):
+        pass
+    elif (filename1 and filename2) and not (filename or seqfile or seqfile1 or seqfile2):
+        pass
+    elif seqfile and not (filename or filename1 or filename2 or seqfile1 or seqfile2):
+        pass
+    elif (seqfile1 and seqfile2) and not (filename or filename1 or filename2 or seqfile):
+        pass
+    else:
+        e = 'Use either -f OR -f1, -f2 OR -s OR -s1, -s2 to indicate input sequences!'
+        raise Exception(e)
+    if P_dir == 'None':
+        print('Warning: Using -d option to save kmer counts in a directory can save you a lot of counting time.')
+    else:
+        os.system('mkdir -p %s'%P_dir)
+    if output == './':
+        print('Warning: Using -o option to change output directory and prefix. Otherwise, output will be generated in the current directory.')
+    else:
+        os.system('mkdir -p %s'%os.path.dirname(output))
+
+
 def get_matrix(a_method):
     if a_method not in ['d2star', 'd2shepp', 'cvtree', 'ma', 'eu', 'd2']:
         print('Invalid method %s'%a_method)
@@ -117,7 +147,7 @@ def write_phy_group(output, a_method, seqname_list_1, seqname_list_2, matrix, fr
     with open(filename, 'wt') as f:
         f.write('%d,%d\n'%(num1, num2))
         for j in range(num2):
-            f.write('\t'+'.'.join(seqname_strip(seqname_list_2[j], from_seq)))
+            f.write('\t'+seqname_strip(seqname_list_2[j], from_seq))
         f.write('\n')
         for i in range(num1):
             f.write(seqname_strip(seqname_list_1[i], from_seq))
@@ -189,16 +219,9 @@ if __name__ == "__main__":
     sequence_list = []
     sequence_list_1 = []
     sequence_list_2 = []
-    if P_dir == 'None':
-        print('Warning: Using -d option to save kmer counts in a directory can save you a lot of counting time.')
-    else:
-        os.system('mkdir -p %s'%P_dir)
     Num_Threads = args.threads
     output = args.output
-    if output == './':
-        print('Warning: Using -o option to change output directory and prefix. Otherwise, output will be generated in the current directory.')
-    else:
-        os.system('mkdir -p %s'%os.path.dirname(output))
+    check_arguments(K, M, filename, filename1, filename2, seqfile, seqfile1, seqfile2, P_dir, output, Num_Threads)
     if BIC:
         if from_seq:
             seqname_old_list, seqname_list, sequence_list = method.get_sequences(seqfile) 
