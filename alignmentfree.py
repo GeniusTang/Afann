@@ -45,8 +45,10 @@ def check_arguments(K, M, filename, filename1, filename2, seqfile, seqfile1, seq
         raise ValueError('Kmer length must be a positive integer!')
     if M <= 0:
         raise ValueError('Markovian order must be a non-negative integer!')
+    '''
     if M >= K:
         raise ValueError('Markovian order cannot be greater than K-2!') 
+    '''
     if threads <= 0:
         raise ValueError('Number of threads must be a positive integer!')
     if filename and not (filename1 or filename2 or seqfile or seqfile1 or seqfile2):

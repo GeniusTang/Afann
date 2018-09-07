@@ -85,6 +85,8 @@ def get_K(seqfile, K, Num_Threads, Reverse, P_dir, sequence = '', from_seq=False
     return K_count
 
 def get_M_K(seqfile, M, K, Num_Threads, Reverse, P_dir, sequence = '', from_seq=False):
+    if M >= K:
+        raise ValueError('Markovian order cannot be greater than K-2!') 
     seq_count_M_p = count_pickle(seqfile, M, Reverse, P_dir)
     seq_count_K_p = count_pickle(seqfile, K, Reverse, P_dir)
     if os.path.exists(seq_count_M_p) and os.path.exists(seq_count_K_p):
