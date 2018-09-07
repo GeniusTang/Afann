@@ -67,8 +67,9 @@ def check_arguments(K, M, filename, filename1, filename2, seqfile, seqfile1, seq
     if output == './':
         print('Warning: Using -o option to change output directory and prefix. Otherwise, output will be generated in the current directory.')
     else:
-        os.system('mkdir -p %s'%os.path.dirname(output))
-
+        d = os.path.dirname(output)
+        if d:
+            os.system('mkdir -p %s'%d)
 
 def get_matrix(a_method):
     if a_method not in ['d2star', 'd2shepp', 'cvtree', 'ma', 'eu', 'd2']:
