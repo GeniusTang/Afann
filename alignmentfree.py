@@ -27,7 +27,7 @@ def seqname_strip(seqname, from_seq):
     if not from_seq:
         seqname = os.path.basename(seqname)
         for suffix in Suffix:
-            seqname = seqname.strip(suffix)
+            seqname = seqname.replace(suffix, '')
     return seqname
 
 def get_sequence_from_file(filename):
