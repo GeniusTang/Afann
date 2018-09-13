@@ -47,8 +47,8 @@ def get_sequences(seqfile):
     with open(seqfile) as f:
         for line in f.readlines():
             if line.startswith('>'):
-                seq_old_name = line.strip()[1:]
-                seq_new_name = seq_old_name.replace('/', '_slash_').replace(' ', '_blank_')
+                seq_old_name = line.strip().split()[0][1:]
+                seq_new_name = seq_old_name.replace('/', '_slash_')
                 seq_old_name_list.append(seq_old_name)
                 seq_new_name_list.append(seq_new_name)
                 if first:
