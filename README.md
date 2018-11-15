@@ -39,7 +39,7 @@ python alignmentfree.py -r -a d2star,d2shepp,CVtree,Ma,Eu,d2 -k 5 -m 0 -f test_f
 ### Example2:
 Calculate pairwise d2star,d2shepp,CVtree,Ma,Eu,d2 distances among all samples listed in test_file_1.txt and all samples listed in test_file_2.txt, using kmer length 5, Markovian order 0.
 ```
-python alignmentfree.py -r -a d2star,d2shepp,CVtree,Ma,Eu,d2 -k 5 -m 0 -f1 test_file_1.txt -f2 test_file_2.txt -t 8 -d test_count/ -o test_result/test
+python alignmentfree.py --slow -r -a d2star,d2shepp,CVtree,Ma,Eu,d2 -k 5 -m 0 -f1 test_file_1.txt -f2 test_file_2.txt -t 8 -d test_count/ -o test_result/test
 ```
 * -o: Save outputs in test_result/ with prefix test
 * --slow: Calculate with less memory usage, but slower
