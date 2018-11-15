@@ -90,4 +90,5 @@ Optional arguments:
   -t THREADS           Number of threads
   -r                   Count the reverse complement of kmers (default: False)
   --BIC                Use BIC to estimate the Markovian orders of sequences
+  --slow               Use slow mode for calculation with less memory usage
 ```

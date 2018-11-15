@@ -350,6 +350,7 @@ def Eu_matrix(f1_matrix, f2_matrix):
     return matrix
  
 def dist_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list = [], from_seq=False, method = None):
+    #print('Slow mode')
     N = len(seqname_list)
     matrix = np.zeros((N, N))
     sequence_1 = ''
@@ -366,44 +367,46 @@ def dist_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequen
             matrix[j][i] = matrix[i][j]
     return matrix
 
-def d2star_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list = [], from_seq=False):
-    if K <= 10:
+def d2star_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list = [], from_seq=False, slow=False):
+    if not slow:
         f_matrix = get_d2star_all_f(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq)
         return cosine_matrix(f_matrix, f_matrix)
     else:
         return dist_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq, method = d2star)
 
-def CVTree_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list = [], from_seq=False):
-    if K <= 10:
+def CVTree_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list = [], from_seq=False, slow=False):
+    if not slow:
         f_matrix = get_CVTree_all_f(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq)
         return cosine_matrix(f_matrix, f_matrix)
     else:
         return dist_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq, method = CVTree)
 
-def d2_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list = [], from_seq=False):
-    if K <= 10:
+def d2_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list = [], from_seq=False, slow=False):
+    if not slow:
         f_matrix = get_all_f(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq)
         return cosine_matrix(f_matrix, f_matrix)
     else:
         return dist_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq, method = d2)
 
-def Ma_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list = [], from_seq=False):
-    if K <= 10:
+def Ma_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list = [], from_seq=False, slow=False):
+    if not slow:
         f_matrix = get_all_f(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq)
         return Ma_matrix(f_matrix, f_matrix)
     else:
         return dist_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq, method = Ma)
 
-def Eu_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list = [], from_seq=False):
-    if K <= 10:
+def Eu_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list = [], from_seq=False, slow=False):
+    if not slow:
         f_matrix = get_all_f(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq)
         return Eu_matrix(f_matrix, f_matrix)
     else:
         return dist_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq, method = Eu)
 
-d2shepp_matrix_pairwise = partial(dist_matrix_pairwise, method = d2shepp)
+def d2shepp_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list = [], from_seq=False, slow=False):
+    return dist_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq, method = d2shepp)
  
 def dist_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_1 = [], sequence_list_2 = [], from_seq=False, method=None):
+    #print('Slow mode')
     N1 = len(seqname_list_1)
     N2 = len(seqname_list_2)
     matrix = np.zeros((N1, N2))
@@ -420,47 +423,48 @@ def dist_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, Rev
             matrix[i][j] = method(seqfile_1, seqfile_2, M, K, Num_Threads, Reverse, P_dir, sequence_1, sequence_2, from_seq)
     return matrix
 
-def d2star_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_1 = [], sequence_list_2 = [], from_seq=False):
-    if K <= 10:
+def d2star_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_1 = [], sequence_list_2 = [], from_seq=False, slow=False):
+    if not slow:
         f1_matrix = get_d2star_all_f(seqname_list_1, M, K, Num_Threads, Reverse, P_dir, sequence_list_1, from_seq)
         f2_matrix = get_d2star_all_f(seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_2, from_seq)
         return cosine_matrix(f1_matrix, f2_matrix)
     else:
         return dist_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_1, sequence_list_2, from_seq, method = d2star)
 
-def CVTree_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_1 = [], sequence_list_2 = [], from_seq=False):
-    if K <= 10:
+def CVTree_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_1 = [], sequence_list_2 = [], from_seq=False, slow=False):
+    if not slow:
         f1_matrix = get_CVTree_all_f(seqname_list_1, M, K, Num_Threads, Reverse, P_dir, sequence_list_1, from_seq)
         f2_matrix = get_CVTree_all_f(seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_2, from_seq)
         return cosine_matrix(f1_matrix, f2_matrix)
     else:
         return dist_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_1, sequence_list_2, from_seq, method = CVTree)
 
-def d2_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_1 = [], sequence_list_2 = [], from_seq=False):
-    if K <= 10:
+def d2_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_1 = [], sequence_list_2 = [], from_seq=False, slow=False):
+    if not slow:
         f1_matrix = get_all_f(seqname_list_1, M, K, Num_Threads, Reverse, P_dir, sequence_list_1, from_seq)
         f2_matrix = get_all_f(seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_2, from_seq)
         return cosine_matrix(f1_matrix, f2_matrix)
     else:
         return dist_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_1, sequence_list_2, from_seq, method = d2)
 
-def Ma_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_1 = [], sequence_list_2 = [], from_seq=False):
-    if K <= 10:
+def Ma_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_1 = [], sequence_list_2 = [], from_seq=False, slow=False):
+    if not slow:
         f1_matrix = get_all_f(seqname_list_1, M, K, Num_Threads, Reverse, P_dir, sequence_list_1, from_seq)
         f2_matrix = get_all_f(seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_2, from_seq)
         return Ma_matrix(f1_matrix, f2_matrix)
     else:
         return dist_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_1, sequence_list_2, from_seq, method = Ma)
 
-def Eu_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_1 = [], sequence_list_2 = [], from_seq=False):
-    if K <= 10:
+def Eu_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_1 = [], sequence_list_2 = [], from_seq=False, slow=False):
+    if not slow:
         f1_matrix = get_all_f(seqname_list_1, M, K, Num_Threads, Reverse, P_dir, sequence_list_1, from_seq)
         f2_matrix = get_all_f(seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_2, from_seq)
         return Eu_matrix(f1_matrix, f2_matrix)
     else:
         return dist_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_1, sequence_list_2, from_seq, method = Eu)
 
-d2shepp_matrix_groupwise = partial(dist_matrix_groupwise, method = d2shepp)
+def d2shepp_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_1 = [], sequence_list_2 = [], from_seq=False, slow=False):
+    return dist_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_1, sequence_list_2, from_seq, method = d2shepp)
 
 def error_array(sequence_list, M, K, Num_Threads, P_dir, method):
     N = len(sequence_list)

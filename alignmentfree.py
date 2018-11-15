@@ -172,7 +172,7 @@ def write_tsv_group(output, a_method, seqname_list_1, seqname_list_2, matrix, fr
                 f.write('%s\t%s\t%.4f\n'%(seq_1, seq_2, matrix[i][j]))
 
 def write_BIC(output, seqname_list, BIC_list, from_seq):
-    print(seqname_list)
+    #print(seqname_list)
     if output.endswith('/'):
         filename = output + 'BIC'
     else:
@@ -202,6 +202,7 @@ if __name__ == "__main__":
     parser.add_argument('-t', dest='threads', type = int, default=1, help='Number of threads')
     parser.add_argument('-r', dest='reverse', action='store_true', default=False, help='Count the reverse complement of kmers (default: False)')
     parser.add_argument('--BIC', dest='BIC', action='store_true', default=False, help='Use BIC to estimate the Markovian orders of sequences')
+    parser.add_argument('--slow', dest='slow', action='store_true', default=False, help='Use slow mode for calculation with less memory usage')
     args = parser.parse_args()
     K = args.K 
     M = args.M + 1
@@ -217,6 +218,7 @@ if __name__ == "__main__":
         from_seq = False
     Reverse = args.reverse
     BIC = args.BIC
+    slow = args.slow
     P_dir = args.Dir
     seqname_list = []
     sequence_list = []
@@ -245,7 +247,7 @@ if __name__ == "__main__":
                 seqname_list = get_sequence_from_file(filename)
             for a_method in methods:
                 print('Calculating %s.'%a_method)
-                matrix = get_matrix(a_method)(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq)
+                matrix = get_matrix(a_method)(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq, slow)
                 if from_seq:
                     seqname_list = seqname_old_list
                 write_tsv(output, a_method, seqname_list, matrix, from_seq)
@@ -259,7 +261,7 @@ if __name__ == "__main__":
                 seqname_list_2 = get_sequence_from_file(filename2)
             for a_method in methods:
                 print('Calculating %s.'%a_method)
-                matrix = get_matrix_group(a_method)(seqname_list_1, seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_1, sequence_list_2, from_seq)
+                matrix = get_matrix_group(a_method)(seqname_list_1, seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_1, sequence_list_2, from_seq, slow)
                 if from_seq:
                     seqname_list_1 = seqname_old_list_1
                     seqname_list_2 = seqname_old_list_2
