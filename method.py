@@ -4,6 +4,8 @@ from src._count import kmer_count_m_k
 from src._count import kmer_count_m_k_seq
 from scipy.spatial.distance import cosine
 from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.metrics.pairwise import manhattan_distances
+from sklearn.metrics.pairwise import euclidean_distances
 from scipy import stats
 from functools import partial
 import numpy as np
@@ -229,6 +231,31 @@ def get_CVTree_f(seqfile, M, K, Num_Threads, Reverse, P_dir, sequence = '', from
             np.save(seqfile_f_p, CVTree_f)
     return CVTree_f   
 
+def get_CVTree_all_f(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list = [], from_seq=False):
+    N = len(seqname_list)
+    f_matrix = np.ones((N, 4**K))
+    for i in range(N):
+        if from_seq:
+            sequence = sequence_list[i]
+        else:
+            sequence = ''
+        seqfile = seqname_list[i]
+        f_matrix[i] = get_CVTree_f(seqfile, M, K, Num_Threads, Reverse, P_dir, sequence, from_seq)
+    return f_matrix
+
+def get_all_f(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list = [], from_seq=False):
+    N = len(seqname_list)
+    f_matrix = np.ones((N, 4**K))
+    for i in range(N):
+        if from_seq:
+            sequence = sequence_list[i]
+        else:
+            sequence = ''
+        seqfile = seqname_list[i]
+        a_K = get_K(seqfile, K, Num_Threads, Reverse, P_dir, sequence, from_seq)
+        f_matrix[i] = a_K/np.sum(a_K)
+    return f_matrix
+
 '''
 def get_all_K(sequence_list, M, K, Num_Threads, Reverse, P_dir):
     K_matrix = np.ones((len(sequence_list), 4**K))
@@ -307,11 +334,21 @@ def d2shepp_error(seqfile, M, K, Num_Threads, P_dir):
         b_f[np.isnan(b_f)]=0
     return 0.5 * cosine(a_f, b_f)
 
-def d2star_matrix(f1_matrix, f2_matrix):
-    d2star_matrix = 0.5 * (1 - cosine_similarity(f1_matrix, f2_matrix))
-    np.fill_diagonal(d2star_matrix, 0)
-    return d2star_matrix
+def cosine_matrix(f1_matrix, f2_matrix):
+    matrix = 0.5 * (1 - cosine_similarity(f1_matrix, f2_matrix))
+    np.fill_diagonal(matrix, 0)
+    return matrix
 
+def Ma_matrix(f1_matrix, f2_matrix):
+    matrix = manhattan_distances(f1_matrix, f2_matrix)
+    np.fill_diagonal(matrix, 0)
+    return matrix
+
+def Eu_matrix(f1_matrix, f2_matrix):
+    matrix = euclidean_distances(f1_matrix, f2_matrix)
+    np.fill_diagonal(matrix, 0)
+    return matrix
+ 
 def dist_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list = [], from_seq=False, method = None):
     N = len(seqname_list)
     matrix = np.zeros((N, N))
@@ -332,16 +369,39 @@ def dist_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequen
 def d2star_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list = [], from_seq=False):
     if K <= 10:
         f_matrix = get_d2star_all_f(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq)
-        return d2star_matrix(f_matrix, f_matrix)
+        return cosine_matrix(f_matrix, f_matrix)
     else:
         return dist_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq, method = d2star)
 
+def CVTree_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list = [], from_seq=False):
+    if K <= 10:
+        f_matrix = get_CVTree_all_f(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq)
+        return cosine_matrix(f_matrix, f_matrix)
+    else:
+        return dist_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq, method = CVTree)
+
+def d2_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list = [], from_seq=False):
+    if K <= 10:
+        f_matrix = get_all_f(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq)
+        return cosine_matrix(f_matrix, f_matrix)
+    else:
+        return dist_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq, method = d2)
+
+def Ma_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list = [], from_seq=False):
+    if K <= 10:
+        f_matrix = get_all_f(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq)
+        return Ma_matrix(f_matrix, f_matrix)
+    else:
+        return dist_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq, method = Ma)
+
+def Eu_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list = [], from_seq=False):
+    if K <= 10:
+        f_matrix = get_all_f(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq)
+        return Eu_matrix(f_matrix, f_matrix)
+    else:
+        return dist_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq, method = Eu)
 
 d2shepp_matrix_pairwise = partial(dist_matrix_pairwise, method = d2shepp)
-CVTree_matrix_pairwise = partial(dist_matrix_pairwise, method = CVTree)
-Ma_matrix_pairwise = partial(dist_matrix_pairwise, method = Ma)
-Eu_matrix_pairwise = partial(dist_matrix_pairwise, method = Eu)
-d2_matrix_pairwise = partial(dist_matrix_pairwise, method = d2)
  
 def dist_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_1 = [], sequence_list_2 = [], from_seq=False, method=None):
     N1 = len(seqname_list_1)
@@ -364,15 +424,43 @@ def d2star_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, R
     if K <= 10:
         f1_matrix = get_d2star_all_f(seqname_list_1, M, K, Num_Threads, Reverse, P_dir, sequence_list_1, from_seq)
         f2_matrix = get_d2star_all_f(seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_2, from_seq)
-        return d2star_matrix(f1_matrix, f2_matrix)
+        return cosine_matrix(f1_matrix, f2_matrix)
     else:
         return dist_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_1, sequence_list_2, from_seq, method = d2star)
 
+def CVTree_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_1 = [], sequence_list_2 = [], from_seq=False):
+    if K <= 10:
+        f1_matrix = get_CVTree_all_f(seqname_list_1, M, K, Num_Threads, Reverse, P_dir, sequence_list_1, from_seq)
+        f2_matrix = get_CVTree_all_f(seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_2, from_seq)
+        return cosine_matrix(f1_matrix, f2_matrix)
+    else:
+        return dist_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_1, sequence_list_2, from_seq, method = CVTree)
+
+def d2_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_1 = [], sequence_list_2 = [], from_seq=False):
+    if K <= 10:
+        f1_matrix = get_all_f(seqname_list_1, M, K, Num_Threads, Reverse, P_dir, sequence_list_1, from_seq)
+        f2_matrix = get_all_f(seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_2, from_seq)
+        return cosine_matrix(f1_matrix, f2_matrix)
+    else:
+        return dist_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_1, sequence_list_2, from_seq, method = d2)
+
+def Ma_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_1 = [], sequence_list_2 = [], from_seq=False):
+    if K <= 10:
+        f1_matrix = get_all_f(seqname_list_1, M, K, Num_Threads, Reverse, P_dir, sequence_list_1, from_seq)
+        f2_matrix = get_all_f(seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_2, from_seq)
+        return Ma_matrix(f1_matrix, f2_matrix)
+    else:
+        return dist_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_1, sequence_list_2, from_seq, method = Ma)
+
+def Eu_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_1 = [], sequence_list_2 = [], from_seq=False):
+    if K <= 10:
+        f1_matrix = get_all_f(seqname_list_1, M, K, Num_Threads, Reverse, P_dir, sequence_list_1, from_seq)
+        f2_matrix = get_all_f(seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_2, from_seq)
+        return Eu_matrix(f1_matrix, f2_matrix)
+    else:
+        return dist_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_1, sequence_list_2, from_seq, method = Eu)
+
 d2shepp_matrix_groupwise = partial(dist_matrix_groupwise, method = d2shepp)
-CVTree_matrix_groupwise = partial(dist_matrix_groupwise, method = CVTree)
-Ma_matrix_groupwise = partial(dist_matrix_groupwise, method = Ma)
-Eu_matrix_groupwise = partial(dist_matrix_groupwise, method = Eu)
-d2_matrix_groupwise = partial(dist_matrix_groupwise, method = d2)
 
 def error_array(sequence_list, M, K, Num_Threads, P_dir, method):
     N = len(sequence_list)
