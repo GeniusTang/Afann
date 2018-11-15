@@ -154,7 +154,7 @@ std::vector<std::atomic<int>> count(std::string filename, int K, int Num_Threads
     std::string temp;
     std::string one_read;
     //int Num_Threads =  std::thread::hardware_concurrency();
-    ctpl::thread_pool p(Num_Threads);
+    ctpl::thread_pool p(std::max(1, Num_Threads));
     while (::VALID) {
 	fs.getline(temp_char, 5000, '\n');
 	std::string temp(temp_char);
@@ -183,7 +183,7 @@ std::vector<std::atomic<int>> count_seq(std::string sequence, int K, int Num_Thr
     const int SIZE = pow(4, K);
     const unsigned int READ_LENGTH = 5000;
     std::vector<std::atomic<int>> count_array(SIZE);
-    ctpl::thread_pool p(Num_Threads);
+    ctpl::thread_pool p(std::max(1, Num_Threads));
     std::string temp;
     for (unsigned i = 0;i < sequence.length(); i += (READ_LENGTH-K+1)) {
         if (::VALID) {
@@ -207,7 +207,7 @@ std::vector<std::atomic<int>> count_M_K(std::string filename, int M, int K, int 
     std::string temp;
     std::string one_read;
     //int Num_Threads =  std::thread::hardware_concurrency();
-    ctpl::thread_pool p(Num_Threads);
+    ctpl::thread_pool p(std::max(1, Num_Threads));
     while (::VALID) {
         fs.getline(temp_char, READ_LENGTH, '\n');
         std::string temp(temp_char);
@@ -236,7 +236,7 @@ std::vector<std::atomic<int>> count_M_K_seq(std::string sequence, int M, int K, 
     const int SIZE = pow(4, M) + pow(4, K);
     const unsigned int READ_LENGTH = 5000;
     std::vector<std::atomic<int>> count_array(SIZE);
-    ctpl::thread_pool p(Num_Threads);
+    ctpl::thread_pool p(std::max(1, Num_Threads));
     std::string temp;
     for (unsigned i = 0;i < sequence.length(); i += (READ_LENGTH-K+1)) {
         if (::VALID) { 
