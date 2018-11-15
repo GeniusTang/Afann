@@ -9,7 +9,7 @@ import os
 import method
 import argparse
 
-Suffix = ['.fna', '.fa', '.fasta']
+Suffix = ['.fasta', '.fsa', '.fna', '.fa']
 Alphabeta = ['A', 'C', 'G', 'T']
 Alpha_dict = dict(zip(Alphabeta, range(4)))
 
