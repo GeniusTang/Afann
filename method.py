@@ -256,6 +256,20 @@ def get_all_f(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list = [
         f_matrix[i] = a_K/np.sum(a_K)
     return f_matrix
 
+def get_all_diff(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list = [], from_seq=False):
+    N = len(seqname_list)
+    diff_matrix = np.ones((N, 4**K))
+    for i in range(N):
+        if from_seq:
+            sequence = sequence_list[i]
+        else:
+            sequence = ''
+        seqfile = seqname_list[i]
+        a_K_count, a_expect = get_expect(seqfile, M, K, Num_Threads, Reverse, P_dir, sequence, from_seq)
+        a_diff = a_K_count - a_expect
+        diff_matrix[i] = a_diff
+    return diff_matrix
+
 '''
 def get_all_K(sequence_list, M, K, Num_Threads, Reverse, P_dir):
     K_matrix = np.ones((len(sequence_list), 4**K))
@@ -403,7 +417,25 @@ def Eu_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence
         return dist_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq, method = Eu)
 
 def d2shepp_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list = [], from_seq=False, slow=False):
-    return dist_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq, method = d2shepp)
+    if not slow:
+        diff_matrix = get_all_diff(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq) 
+        N = len(seqname_list)
+        matrix = np.zeros((N, N))  
+        for i in range(N):
+            a_diff = diff_matrix[i]
+            for j in range(i+1, N):
+                b_diff = diff_matrix[j]
+                denom = np.power(a_diff**2 + b_diff**2, 0.25)
+                with np.errstate(divide='ignore', invalid='ignore'):
+                    a_f = a_diff/denom
+                    a_f[np.isnan(a_f)]=0
+                    b_f = b_diff/denom
+                    b_f[np.isnan(b_f)]=0 
+                matrix[i][j] = 0.5 * cosine(a_f, b_f)
+                matrix[j][i] = matrix[i][j]
+        return matrix 
+    else:
+        return dist_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq, method = d2shepp)
  
 def dist_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_1 = [], sequence_list_2 = [], from_seq=False, method=None):
     #print('Slow mode')
@@ -464,7 +496,26 @@ def Eu_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, Rever
         return dist_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_1, sequence_list_2, from_seq, method = Eu)
 
 def d2shepp_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_1 = [], sequence_list_2 = [], from_seq=False, slow=False):
-    return dist_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_1, sequence_list_2, from_seq, method = d2shepp)
+    if not slow:
+        a_diff_matrix = get_all_diff(seqname_list_1, M, K, Num_Threads, Reverse, P_dir, sequence_list_1, from_seq)
+        b_diff_matrix = get_all_diff(seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_2, from_seq) 
+        N1 = len(seqname_list_1)
+        N2 = len(seqname_list_2)
+        matrix = np.zeros((N1, N2))
+        for i in range(N1):
+            a_diff = a_diff_matrix[i]
+            for j in range(N2):
+                b_diff = b_diff_matrix[j]
+                denom = np.power(a_diff**2 + b_diff**2, 0.25)
+                with np.errstate(divide='ignore', invalid='ignore'):
+                    a_f = a_diff/denom
+                    a_f[np.isnan(a_f)]=0
+                    b_f = b_diff/denom
+                    b_f[np.isnan(b_f)]=0 
+                matrix[i][j] = 0.5 * cosine(a_f, b_f)
+        return matrix
+    else:
+        return dist_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_1, sequence_list_2, from_seq, method = d2shepp)
 
 def error_array(sequence_list, M, K, Num_Threads, P_dir, method):
     N = len(sequence_list)
