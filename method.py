@@ -348,18 +348,27 @@ def d2shepp_error(seqfile, M, K, Num_Threads, P_dir):
         b_f[np.isnan(b_f)]=0
     return 0.5 * cosine(a_f, b_f)
 
-def cosine_matrix(f1_matrix, f2_matrix):
-    matrix = 0.5 * (1 - cosine_similarity(f1_matrix, f2_matrix))
+def cosine_matrix(f1_matrix, f2_matrix=None):
+    if f2_matrix:
+        matrix = 0.5 * (1 - cosine_similarity(f1_matrix, f2_matrix))
+    else:
+        matrix = 0.5 * (1 - cosine_similarity(f1_matrix))
     np.fill_diagonal(matrix, 0)
     return matrix
 
-def Ma_matrix(f1_matrix, f2_matrix):
-    matrix = manhattan_distances(f1_matrix, f2_matrix)
+def Ma_matrix(f1_matrix, f2_matrix=None):
+    if f2_matrix:
+        matrix = manhattan_distances(f1_matrix, f2_matrix)
+    else:
+        matrix = manhattan_distances(f1_matrix)
     np.fill_diagonal(matrix, 0)
     return matrix
 
-def Eu_matrix(f1_matrix, f2_matrix):
-    matrix = euclidean_distances(f1_matrix, f2_matrix)
+def Eu_matrix(f1_matrix, f2_matrix=None):
+    if f2_matrix:
+        matrix = euclidean_distances(f1_matrix, f2_matrix)
+    else:
+        matrix = euclidean_distances(f1_matrix)
     np.fill_diagonal(matrix, 0)
     return matrix
  
@@ -384,35 +393,35 @@ def dist_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequen
 def d2star_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list = [], from_seq=False, slow=False):
     if not slow:
         f_matrix = get_d2star_all_f(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq)
-        return cosine_matrix(f_matrix, f_matrix)
+        return cosine_matrix(f_matrix)
     else:
         return dist_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq, method = d2star)
 
 def CVTree_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list = [], from_seq=False, slow=False):
     if not slow:
         f_matrix = get_CVTree_all_f(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq)
-        return cosine_matrix(f_matrix, f_matrix)
+        return cosine_matrix(f_matrix)
     else:
         return dist_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq, method = CVTree)
 
 def d2_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list = [], from_seq=False, slow=False):
     if not slow:
         f_matrix = get_all_f(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq)
-        return cosine_matrix(f_matrix, f_matrix)
+        return cosine_matrix(f_matrix)
     else:
         return dist_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq, method = d2)
 
 def Ma_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list = [], from_seq=False, slow=False):
     if not slow:
         f_matrix = get_all_f(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq)
-        return Ma_matrix(f_matrix, f_matrix)
+        return Ma_matrix(f_matrix)
     else:
         return dist_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq, method = Ma)
 
 def Eu_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list = [], from_seq=False, slow=False):
     if not slow:
         f_matrix = get_all_f(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq)
-        return Eu_matrix(f_matrix, f_matrix)
+        return Eu_matrix(f_matrix)
     else:
         return dist_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq, method = Eu)
 
