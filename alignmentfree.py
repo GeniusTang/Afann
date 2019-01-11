@@ -35,6 +35,9 @@ def get_sequence_from_file(filename):
     with open(filename) as f:
         for line in f.readlines():
             line = line.strip()
+            if not os.path.exists(line):
+                e = 'File %s do no exsits!'%line
+                raise Exception(e)
             for suffix in Suffix:
                 if line.endswith(suffix):
                     sequence_list.append(line)
