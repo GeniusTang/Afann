@@ -150,9 +150,9 @@ def get_expect(seqfile, M, K, Num_Threads, Reverse, P_dir, sequence = '', from_s
             np.save(seqfile_e_p, expect)
     return K_count, expect
 
-def get_expect_reverse(seqfile, M, K, Num_Threads, P_dir):
-    a_M_count, a_K_count = get_M_K(seqfile, M, K, Num_Threads, False, P_dir)
-    b_M_count, b_K_count = get_M_K(seqfile, M, K, Num_Threads, True, P_dir)
+def get_expect_reverse(seqfile, M, K, Num_Threads, P_dir, sequence = '', from_seq=False):
+    a_M_count, a_K_count = get_M_K(seqfile, M, K, Num_Threads, False, P_dir, sequence, from_seq)
+    b_M_count, b_K_count = get_M_K(seqfile, M, K, Num_Threads, True, P_dir, sequence, from_seq)
     M_count = b_M_count - a_M_count
     del a_M_count
     del b_M_count
@@ -331,12 +331,12 @@ def d2shepp(seqfile_1, seqfile_2, M, K, Num_Threads, Reverse, P_dir, sequence_1 
         b_f[np.isnan(b_f)]=0 
     return 0.5 * cosine(a_f, b_f)
 
-def d2shepp_error(seqfile, M, K, Num_Threads, P_dir):
-    a_K_count, a_expect = get_expect(seqfile, M, K, Num_Threads, False, P_dir)
+def d2shepp_bias(seqfile, M, K, Num_Threads, P_dir, sequence = '', from_seq=False):
+    a_K_count, a_expect = get_expect(seqfile, M, K, Num_Threads, False, P_dir, sequence, from_seq)
     a_diff = a_K_count - a_expect
     del a_K_count
     del a_expect
-    b_K_count, b_expect = get_expect_reverse(seqfile, M, K, Num_Threads, P_dir)
+    b_K_count, b_expect = get_expect_reverse(seqfile, M, K, Num_Threads, P_dir, sequence, from_seq)
     b_diff = b_K_count - b_expect
     del b_K_count
     del b_expect
@@ -348,8 +348,25 @@ def d2shepp_error(seqfile, M, K, Num_Threads, P_dir):
         b_f[np.isnan(b_f)]=0
     return 0.5 * cosine(a_f, b_f)
 
+def d2star_bias(seqfile, M, K, Num_Threads, P_dir, sequence = '', from_seq=False):
+    a_K_count, a_expect = get_expect(seqfile, M, K, Num_Threads, False, P_dir, sequence, from_seq)
+    a_diff = a_K_count - a_expect
+    del a_K_count
+    with np.errstate(divide='ignore', invalid='ignore'):
+        a_f = (a_diff)/np.sqrt(a_expect)
+        a_f[np.isnan(a_f)]=0
+    del a_expect
+    b_K_count, b_expect = get_expect_reverse(seqfile, M, K, Num_Threads, P_dir, sequence, from_seq)
+    b_diff = b_K_count - b_expect
+    del b_K_count
+    with np.errstate(divide='ignore', invalid='ignore'):
+        b_f = (b_diff)/np.sqrt(b_expect)
+        b_f[np.isnan(b_f)]=0
+    del b_expect
+    return 0.5 * cosine(a_f, b_f)
+
 def cosine_matrix(f1_matrix, f2_matrix=None):
-    if f2_matrix:
+    if f2_matrix is not None:
         matrix = 0.5 * (1 - cosine_similarity(f1_matrix, f2_matrix))
     else:
         matrix = 0.5 * (1 - cosine_similarity(f1_matrix))
@@ -357,7 +374,7 @@ def cosine_matrix(f1_matrix, f2_matrix=None):
     return matrix
 
 def Ma_matrix(f1_matrix, f2_matrix=None):
-    if f2_matrix:
+    if f2_matrix is not None:
         matrix = manhattan_distances(f1_matrix, f2_matrix)
     else:
         matrix = manhattan_distances(f1_matrix)
@@ -365,7 +382,7 @@ def Ma_matrix(f1_matrix, f2_matrix=None):
     return matrix
 
 def Eu_matrix(f1_matrix, f2_matrix=None):
-    if f2_matrix:
+    if f2_matrix is not None:
         matrix = euclidean_distances(f1_matrix, f2_matrix)
     else:
         matrix = euclidean_distances(f1_matrix)
@@ -526,13 +543,43 @@ def d2shepp_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, 
     else:
         return dist_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_1, sequence_list_2, from_seq, method = d2shepp)
 
-def error_array(sequence_list, M, K, Num_Threads, P_dir, method):
-    N = len(sequence_list)
+def bias_array(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list = [], from_seq=False, slow=False, method = None):
+    N = len(seqname_list)
     array = np.zeros(N)
+    sequence = ''
     for i in range(N):
-        seqfile = sequence_list[i]
-        array[i] = method(seqfile, M, K, Num_Thread, P_dir)
+        if from_seq:
+            sequence = sequence_list[i]
+        seqfile = seqname_list[i]
+        array[i] = method(seqfile, M, K, Num_Threads, P_dir, sequence, from_seq)
     return array
 
-d2shepp_error_array = partial(error_array, method = d2shepp_error)
+d2shepp_bias_array = partial(bias_array, method = d2shepp_bias)
+d2star_bias_array = partial(bias_array, method = d2star_bias)
 
+def bias_ajust(dist, bias_1, bias_2):
+   sim_1 = ((0.5-bias_1)*2)**0.5 
+   sim_2 = ((0.5-bias_2)*2)**0.5 
+   sim_min = (min(sim_1, sim_2)**3 * max(sim_1, sim_2))**(1/4)
+   sim = (0.5-dist)*2
+   a = np.linspace(0, 1, 10000)
+   b = abs(a * sim_min ** (1 + (a**0.5-sim_min)/1.3) - sim)
+   sim = a[np.argmin(b)]
+   return (1-sim)*0.5
+
+def matrix_ajusted_pairwise(matrix, bias_array):
+   new_matrix = np.zeros_like(matrix)
+   row = matrix.shape[0]
+   for i in range(row):
+       for j in range(i+1, row):
+           new_matrix[i][j] = bias_ajust(matrix[i][j], bias_array[i], bias_array[j])
+           new_matrix[j][i] = bias_ajust(matrix[i][j], bias_array[i], bias_array[j])
+   return new_matrix
+
+def matrix_ajusted_groupwise(matrix, bias_array_1, bias_array_2):
+    new_matrix = np.zeros_like(matrix)
+    row, col = matrix.shape
+    for i in range(row):
+        for j in range(col):
+            new_matrix[i][j] = bias_ajust(matrix[i][j], bias_array_1[i], bias_array_2[j])
+    return new_matrix

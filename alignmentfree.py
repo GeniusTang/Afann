@@ -95,6 +95,14 @@ def get_matrix(a_method):
         else:
             return method.d2_matrix_pairwise
  
+def get_bias(a_method):
+    if a_method == 'd2star':
+        return method.d2star_bias_array
+    elif a_method == 'd2shepp':
+        return method.d2shepp_bias_array
+    else:
+        return None
+
 def get_matrix_group(a_method):
     if a_method not in ['d2star', 'd2shepp', 'cvtree', 'ma', 'eu', 'd2']:
         print('Invalid method %s'%a_method)
@@ -173,6 +181,19 @@ def write_tsv_group(output, a_method, seqname_list_1, seqname_list_2, matrix, fr
             for j in np.argsort(matrix[i]):
                 seq_2 = seqname_strip(seqname_list_2[j], from_seq)
                 f.write('%s\t%s\t%.4f\n'%(seq_1, seq_2, matrix[i][j]))
+
+def write_bias(output, a_method, seqname_list_1, seqname_list_2, array1, array2, from_seq):
+    if output.endswith('/'):
+        filename = output + a_method + '.bias' + '.' + 'tsv'
+    else:
+        filename = '.'.join([output, a_method, 'bias', 'tsv'])
+    with open(filename, 'wt') as f:
+        for i in range(len(array1)):
+            seq = seqname_strip(seqname_list_1[i], from_seq)
+            f.write('%s\t%.4f\n'%(seq, array1[i]))
+        for j in range(len(array2)):
+            seq = seqname_strip(seqname_list_2[i], from_seq) 
+            f.write('%s\t%.4f\n'%(seq, array2[i]))
 
 def write_BIC(output, seqname_list, BIC_list, from_seq):
     #print(seqname_list)
@@ -255,6 +276,12 @@ if __name__ == "__main__":
                     seqname_list = seqname_old_list
                 write_tsv(output, a_method, seqname_list, matrix, from_seq)
                 write_phy(output, a_method, seqname_list, matrix, from_seq)
+                if a_method in ['d2star', 'd2shepp'] and Reverse:
+                    bias_array = get_bias(a_method)(seqname_list, M, K, Num_Threads, Reverse, P_dir,  sequence_list, from_seq, slow)
+                    write_bias(output, a_method, seqname_list, [], bias_array, [], from_seq)
+                    new_matrix = method.matrix_ajusted_pairwise(matrix, bias_array)
+                    write_tsv(output, a_method + '_ajusted', seqname_list, new_matrix, from_seq)
+                    write_phy(output, a_method + '_ajusted', seqname_list, new_matrix, from_seq)
         else: 
             if from_seq:
                 seqname_old_list_1, seqname_list_1, sequence_list_1 = method.get_sequences(seqfile1)
@@ -270,3 +297,10 @@ if __name__ == "__main__":
                     seqname_list_2 = seqname_old_list_2
                 write_phy_group(output, a_method, seqname_list_1, seqname_list_2, matrix, from_seq)
                 write_tsv_group(output, a_method, seqname_list_1, seqname_list_2, matrix, from_seq)
+                if a_method in ['d2star', 'd2shepp'] and Reverse:
+                    bias_array_1 = get_bias(a_method)(seqname_list_1, M, K, Num_Threads, Reverse, P_dir,  sequence_list_1, from_seq, slow)
+                    bias_array_2 = get_bias(a_method)(seqname_list_2, M, K, Num_Threads, Reverse, P_dir,  sequence_list_2, from_seq, slow)
+                    write_bias(output, a_method, seqname_list_1, seqname_list_2, bias_array_1, bias_array_2, from_seq)
+                    new_matrix = method.matrix_ajusted_groupwise(matrix, bias_array_1, bias_array_2)
+                    write_phy_group(output, a_method + '_ajusted', seqname_list_1, seqname_list_2, new_matrix, from_seq)
+                    write_tsv_group(output, a_method + '_ajusted', seqname_list_1, seqname_list_2, new_matrix, from_seq)
