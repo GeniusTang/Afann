@@ -3,10 +3,10 @@ Fast alignment-free software
 
 ## Prerequisites:
 ### Program:
-* [Python3](https://www.python.org/downloads/release/python-363/) or [Anaconda3](https://conda.io/docs/user-guide/install/download.html)
+* [Python3](https://www.python.org/downloads/release/python-363/) or [Anaconda3](https://www.anaconda.com/download/)
 ### Packages:
 * Required Python3 packages: numpy, scipy, sklearn-learn.
-* We recommend use [Anaconda3](https://conda.io/docs/user-guide/install/download.html) to install all required packages:
+* We recommend use [Anaconda3](https://www.anaconda.com/download/) to install all required packages:
 ```
 conda install numpy scipy scikit-learn
 ```
@@ -59,7 +59,8 @@ python alignmentfree.py -r --BIC -k 5 -f test_file.txt -t 8 -d test_count/ -o te
 usage: alignmentfree.py [-h] [-a METHOD] -k K [-m M] [-f FILENAME]
                         [-s SEQUENCE_FILE] [-f1 FILENAME1] [-f2 FILENAME2]
                         [-s1 SEQUENCE_FILE_1] [-s2 SEQUENCE_FILE_2] [-d DIR]
-                        [-o OUTPUT] [-t THREADS] [-r] [--BIC]
+                        [-o OUTPUT] [-t THREADS] [-r] [--adjust] [--BIC]
+                        [--slow]
 ```
 
 Optional arguments:
@@ -90,6 +91,9 @@ Optional arguments:
   -o OUTPUT            Prefix of output (defualt: Current directory)
   -t THREADS           Number of threads
   -r                   Count the reverse complement of kmers (default: False)
+  --adjust             Adjust d2star and/or d2shepp distances for NGS samples,
+                       -r will be set automatically
   --BIC                Use BIC to estimate the Markovian orders of sequences
   --slow               Use slow mode for calculation with less memory usage
+                       (default: False)
 ```
