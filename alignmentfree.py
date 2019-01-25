@@ -224,9 +224,10 @@ if __name__ == "__main__":
     parser.add_argument('-d', dest='Dir', default='None', help='A directory that saves kmer count')
     parser.add_argument('-o', dest='output', help='Prefix of output (defualt: Current directory)', default='./')
     parser.add_argument('-t', dest='threads', type = int, default=1, help='Number of threads')
-    parser.add_argument('-r', dest='reverse', action='store_true', default=False, help='Count the reverse complement of kmers (default: False)')
+    parser.add_argument('-r', dest='reverse_complement', action='store_true', default=False, help='Count the reverse complement of kmers (default: False)')
+    parser.add_argument('--adjust', dest='adjust', action='store_true', default=False, help='Adjust d2star and/or d2shepp distances for NGS samples, -r will be set automatically')
     parser.add_argument('--BIC', dest='BIC', action='store_true', default=False, help='Use BIC to estimate the Markovian orders of sequences')
-    parser.add_argument('--slow', dest='slow', action='store_true', default=False, help='Use slow mode for calculation with less memory usage')
+    parser.add_argument('--slow', dest='slow', action='store_true', default=False, help='Use slow mode for calculation with less memory usage (default: False)')
     args = parser.parse_args()
     K = args.K 
     M = args.M + 1
@@ -240,7 +241,10 @@ if __name__ == "__main__":
         from_seq = True
     else:
         from_seq = False
-    Reverse = args.reverse
+    Reverse = args.reverse_complement
+    adjust = args.adjust 
+    if adjust:
+        Reverse = True
     BIC = args.BIC
     slow = args.slow
     P_dir = args.Dir
@@ -276,7 +280,7 @@ if __name__ == "__main__":
                     seqname_list = seqname_old_list
                 write_tsv(output, a_method, seqname_list, matrix, from_seq)
                 write_phy(output, a_method, seqname_list, matrix, from_seq)
-                if a_method in ['d2star', 'd2shepp'] and Reverse:
+                if a_method in ['d2star', 'd2shepp'] and Reverse and adjust:
                     bias_array = get_bias(a_method)(seqname_list, M, K, Num_Threads, Reverse, P_dir,  sequence_list, from_seq, slow)
                     write_bias(output, a_method, seqname_list, [], bias_array, [], from_seq)
                     new_matrix = method.matrix_adjusted_pairwise(matrix, bias_array)
@@ -297,7 +301,7 @@ if __name__ == "__main__":
                     seqname_list_2 = seqname_old_list_2
                 write_phy_group(output, a_method, seqname_list_1, seqname_list_2, matrix, from_seq)
                 write_tsv_group(output, a_method, seqname_list_1, seqname_list_2, matrix, from_seq)
-                if a_method in ['d2star', 'd2shepp'] and Reverse:
+                if a_method in ['d2star', 'd2shepp'] and Reverse and adjust:
                     bias_array_1 = get_bias(a_method)(seqname_list_1, M, K, Num_Threads, Reverse, P_dir,  sequence_list_1, from_seq, slow)
                     bias_array_2 = get_bias(a_method)(seqname_list_2, M, K, Num_Threads, Reverse, P_dir,  sequence_list_2, from_seq, slow)
                     write_bias(output, a_method, seqname_list_1, seqname_list_2, bias_array_1, bias_array_2, from_seq)
