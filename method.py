@@ -560,10 +560,10 @@ d2star_bias_array = partial(bias_array, method = d2star_bias)
 def bias_adjust(dist, bias_1, bias_2):
    sim_1 = ((0.5-bias_1)*2)**0.5 
    sim_2 = ((0.5-bias_2)*2)**0.5 
-   sim_min = (min(sim_1, sim_2)**3 * max(sim_1, sim_2))**(1/4)
+   sim_min = (min(sim_1, sim_2)**4 * max(sim_1, sim_2))**(1/5)
    sim = (0.5-dist)*2
    a = np.linspace(0, 1, 10000)
-   b = abs(a * sim_min ** (1 + (a**0.5-sim_min)/1.3) - sim)
+   b = abs(a * sim_min ** (1 + (a**0.5-sim_min)/1.5) - sim)
    sim = a[np.argmin(b)]
    return (1-sim)*0.5
 
