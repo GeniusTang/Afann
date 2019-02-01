@@ -37,7 +37,7 @@ def check_count(seqfile, K_count):
         raise Exception('Sequence file %s is empty!'%seqfile)
 
 def count_pickle(seqfile, K, Reverse, P_dir):
-    seq_count_p = os.path.join(P_dir, os.path.basename(seqfile) + '.%s_%d_cnt.npy'%('R' if Reverse else 'NR', K))
+    seq_count_p = os.path.join(P_dir, os.path.basename(seqfile) + '.%s_K%d_cnt.npy'%('R' if Reverse else 'NR', K))
     return seq_count_p
 
 def get_sequences(seqfile):
