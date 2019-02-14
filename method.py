@@ -9,6 +9,7 @@ from sklearn.metrics.pairwise import euclidean_distances
 from scipy import stats
 from functools import partial
 import numpy as np
+import numexpr as ne
 import os
 from numpy import linalg as LA
 
@@ -314,7 +315,8 @@ def CVTree(seqfile_1, seqfile_2, M, K, Num_Threads, Reverse, P_dir, sequence_1 =
         b_f = get_CVTree_f(seqfile_2, M, K, Num_Threads, Reverse, P_dir)
     return 0.5 * cosine(a_f, b_f)
 
-def d2shepp(seqfile_1, seqfile_2, M, K, Num_Threads, Reverse, P_dir, sequence_1 = '', sequence_2 = '', from_seq=False):
+'''
+def d2shepp_deprecated(seqfile_1, seqfile_2, M, K, Num_Threads, Reverse, P_dir, sequence_1 = '', sequence_2 = '', from_seq=False):
     a_K_count, a_expect = get_expect(seqfile_1, M, K, Num_Threads, Reverse, P_dir, sequence_1, from_seq)
     a_diff = a_K_count - a_expect
     del a_K_count
@@ -330,6 +332,26 @@ def d2shepp(seqfile_1, seqfile_2, M, K, Num_Threads, Reverse, P_dir, sequence_1 
         b_f = b_diff/denom
         b_f[np.isnan(b_f)]=0 
     return 0.5 * cosine(a_f, b_f)
+'''
+
+def d2shepp(seqfile_1, seqfile_2, M, K, Num_Threads, Reverse, P_dir, sequence_1 = '', sequence_2 = '', from_seq=False):
+    a_K_count, a_expect = get_expect(seqfile_1, M, K, Num_Threads, Reverse, P_dir, sequence_1, from_seq)
+    a_diff = ne.evaluate("a_K_count - a_expect")
+    del a_K_count
+    del a_expect
+    b_K_count, b_expect = get_expect(seqfile_2, M, K, Num_Threads, Reverse, P_dir, sequence_2, from_seq)
+    b_diff = ne.evaluate("b_K_count - b_expect")
+    del b_K_count
+    del b_expect
+    denom = ne.evaluate("(a_diff**2 + b_diff**2)**0.25")
+    a_diff = ne.evaluate("a_diff/denom")
+    b_diff = ne.evaluate("b_diff/denom")
+    del denom
+    a_diff[np.isnan(a_diff)]=0
+    b_diff[np.isnan(b_diff)]=0
+    nom = ne.evaluate("sum(a_diff * b_diff)")
+    denom = np.sqrt(ne.evaluate("sum(a_diff**2)") * ne.evaluate("sum(b_diff**2)"))
+    return 0.5 * (1 - nom/denom) 
 
 def d2shepp_bias(seqfile, M, K, Num_Threads, P_dir, sequence = '', from_seq=False):
     a_K_count, a_expect = get_expect(seqfile, M, K, Num_Threads, False, P_dir, sequence, from_seq)
