@@ -2,7 +2,7 @@ from src._count import kmer_count
 from src._count import kmer_count_seq
 from src._count import kmer_count_m_k
 from src._count import kmer_count_m_k_seq
-from scipy.spatial.distance import cosine
+#from scipy.spatial.distance import cosine
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.metrics.pairwise import manhattan_distances
 from sklearn.metrics.pairwise import euclidean_distances
@@ -192,8 +192,8 @@ def all_BIC(seqname_list, K, Num_Threads, Reverse, P_dir, sequence_list = [], fr
         for seqfile in seqname_list:
             order.append(BIC(seqfile, K, Num_Threads, Reverse, P_dir))
     return order
-
-def get_d2star_f(seqfile, M, K, Num_Threads, Reverse, P_dir, sequence = '', from_seq=False):
+'''
+def get_d2star_f_deprecated(seqfile, M, K, Num_Threads, Reverse, P_dir, sequence = '', from_seq=False):
     seqfile_f_p = os.path.join(P_dir, os.path.basename(seqfile) + '.%s_M%d_K%d_d2star_f.npy'%('R' if Reverse else 'NR', M-1, K))
     if os.path.exists(seqfile_f_p):
         d2star_f = np.load(seqfile_f_p)
@@ -202,6 +202,18 @@ def get_d2star_f(seqfile, M, K, Num_Threads, Reverse, P_dir, sequence = '', from
         with np.errstate(divide='ignore', invalid='ignore'):
             d2star_f = (K_count-expect)/np.sqrt(expect)
             d2star_f[np.isnan(d2star_f)]=0
+        if P_dir != 'None':
+            np.save(seqfile_f_p, d2star_f)
+    return d2star_f
+'''
+def get_d2star_f(seqfile, M, K, Num_Threads, Reverse, P_dir, sequence = '', from_seq=False):
+    seqfile_f_p = os.path.join(P_dir, os.path.basename(seqfile) + '.%s_M%d_K%d_d2star_f.npy'%('R' if Reverse else 'NR', M-1, K))
+    if os.path.exists(seqfile_f_p):
+        d2star_f = np.load(seqfile_f_p)
+    else:
+        K_count, expect = get_expect(seqfile, M, K, Num_Threads, Reverse, P_dir, sequence, from_seq)
+        d2star_f = ne.evaluate("(K_count-expect)/sqrt(expect)")
+        d2star_f[np.isnan(d2star_f)]=0
         if P_dir != 'None':
             np.save(seqfile_f_p, d2star_f)
     return d2star_f
@@ -217,8 +229,8 @@ def get_d2star_all_f(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_l
         seqfile = seqname_list[i]
         f_matrix[i] = get_d2star_f(seqfile, M, K, Num_Threads, Reverse, P_dir, sequence, from_seq)
     return f_matrix
-
-def get_CVTree_f(seqfile, M, K, Num_Threads, Reverse, P_dir, sequence = '', from_seq=False):
+'''
+def get_CVTree_f_deprecated(seqfile, M, K, Num_Threads, Reverse, P_dir, sequence = '', from_seq=False):
     M = K - 1
     seqfile_f_p = os.path.join(P_dir, os.path.basename(seqfile) + '.%s_M%d_K%d_CVTree_f.npy'%('R' if Reverse else 'NR', M-1, K))
     if os.path.exists(seqfile_f_p):
@@ -231,6 +243,19 @@ def get_CVTree_f(seqfile, M, K, Num_Threads, Reverse, P_dir, sequence = '', from
         if P_dir != 'None':
             np.save(seqfile_f_p, CVTree_f)
     return CVTree_f   
+'''
+def get_CVTree_f(seqfile, M, K, Num_Threads, Reverse, P_dir, sequence = '', from_seq=False):
+    M = K - 1
+    seqfile_f_p = os.path.join(P_dir, os.path.basename(seqfile) + '.%s_M%d_K%d_CVTree_f.npy'%('R' if Reverse else 'NR', M-1, K))
+    if os.path.exists(seqfile_f_p):
+        CVTree_f = np.load(seqfile_f_p)
+    else:
+        K_count, expect = get_expect(seqfile, M, K, Num_Threads, Reverse, P_dir, sequence, from_seq)
+        CVTree_f = ne.evaluate("(K_count-expect)/expect")
+        CVTree_f[np.isnan(CVTree_f)]=0
+        if P_dir != 'None':
+            np.save(seqfile_f_p, CVTree_f)
+    return CVTree_f
 
 def get_CVTree_all_f(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list = [], from_seq=False):
     N = len(seqname_list)
@@ -254,7 +279,8 @@ def get_all_f(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list = [
             sequence = ''
         seqfile = seqname_list[i]
         a_K = get_K(seqfile, K, Num_Threads, Reverse, P_dir, sequence, from_seq)
-        f_matrix[i] = a_K/np.sum(a_K)
+        #f_matrix[i] = a_K/np.sum(a_K)
+        np.divide(a_K, np.sum(a_K), out=f_matrix[i])
     return f_matrix
 
 def get_all_diff(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list = [], from_seq=False):
@@ -267,8 +293,9 @@ def get_all_diff(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list 
             sequence = ''
         seqfile = seqname_list[i]
         a_K_count, a_expect = get_expect(seqfile, M, K, Num_Threads, Reverse, P_dir, sequence, from_seq)
-        a_diff = a_K_count - a_expect
-        diff_matrix[i] = a_diff
+        #a_diff = a_K_count - a_expect
+        #diff_matrix[i] = a_diff
+        np.subtract(a_K_count, a_expect, out=diff_matrix[i])
     return diff_matrix
 
 '''
@@ -279,23 +306,38 @@ def get_all_K(sequence_list, M, K, Num_Threads, Reverse, P_dir):
         K_matrix[i] = K_count/np.sum(K_count)
     return K_matrix
 '''
+def cosine(a, b):
+    num = ne.evaluate("sum(a * b)") 
+    denom = np.sqrt(ne.evaluate("sum(a ** 2)") * ne.evaluate("sum(b ** 2)"))
+    return 1 - num / denom
 
 def Ma(seqfile_1, seqfile_2, M, K, Num_Threads, Reverse, P_dir, sequence_1 = '', sequence_2 = '', from_seq=False):
     a_K = get_K(seqfile_1, K, Num_Threads, Reverse, P_dir, sequence_1, from_seq)
     b_K = get_K(seqfile_2, K, Num_Threads, Reverse, P_dir, sequence_2, from_seq) 
-    diff = a_K/np.sum(a_K) - b_K/np.sum(b_K)
-    return LA.norm(diff, 1) 
+    a_sum = ne.evaluate("sum(a_K)")
+    b_sum = ne.evaluate("sum(b_K)")
+    a_K = ne.evaluate("a_K/a_sum")
+    b_K = ne.evaluate("b_K/b_sum")
+    return LA.norm(ne.evaluate("a_K-b_K"), 1) 
 
 def Eu(seqfile_1, seqfile_2, M, K, Num_Threads, Reverse, P_dir, sequence_1 = '', sequence_2 = '', from_seq=False):
     a_K = get_K(seqfile_1, K, Num_Threads, Reverse, P_dir, sequence_1, from_seq)
     b_K = get_K(seqfile_2, K, Num_Threads, Reverse, P_dir, sequence_2, from_seq)
-    diff = a_K/np.sum(a_K) - b_K/np.sum(b_K)
-    return LA.norm(diff)
+    a_sum = ne.evaluate("sum(a_K)")
+    b_sum = ne.evaluate("sum(b_K)")
+    a_K = ne.evaluate("a_K/a_sum")
+    b_K = ne.evaluate("b_K/b_sum")
+    #diff = a_K/np.sum(a_K) - b_K/np.sum(b_K)
+    return LA.norm(ne.evaluate("a_K-b_K"))
 
 def d2(seqfile_1, seqfile_2, M, K, Num_Threads, Reverse, P_dir, sequence_1 = '', sequence_2 = '', from_seq=False):
     a_K = get_K(seqfile_1, K, Num_Threads, Reverse, P_dir, sequence_1, from_seq)
     b_K = get_K(seqfile_2, K, Num_Threads, Reverse, P_dir, sequence_2, from_seq)
-    return 0.5 * cosine(a_K/np.sum(a_K), b_K/np.sum(b_K))
+    a_sum = ne.evaluate("sum(a_K)")
+    b_sum = ne.evaluate("sum(b_K)")
+    a_K = ne.evaluate("a_K/a_sum")
+    b_K = ne.evaluate("b_K/b_sum")
+    return 0.5 * cosine(a_K, b_K)
 
 def d2star(seqfile_1, seqfile_2, M, K, Num_Threads, Reverse, P_dir, sequence_1 = '', sequence_2 = '', from_seq=False):
     if from_seq:
@@ -349,43 +391,41 @@ def d2shepp(seqfile_1, seqfile_2, M, K, Num_Threads, Reverse, P_dir, sequence_1 
     del denom
     a_diff[np.isnan(a_diff)]=0
     b_diff[np.isnan(b_diff)]=0
-    nom = ne.evaluate("sum(a_diff * b_diff)")
-    denom = np.sqrt(ne.evaluate("sum(a_diff**2)") * ne.evaluate("sum(b_diff**2)"))
-    return 0.5 * (1 - nom/denom) 
+    #nom = ne.evaluate("sum(a_diff * b_diff)")
+    #denom = np.sqrt(ne.evaluate("sum(a_diff**2)") * ne.evaluate("sum(b_diff**2)"))
+    return 0.5 * cosine(a_diff, b_diff)
 
 def d2shepp_bias(seqfile, M, K, Num_Threads, P_dir, sequence = '', from_seq=False):
     a_K_count, a_expect = get_expect(seqfile, M, K, Num_Threads, False, P_dir, sequence, from_seq)
-    a_diff = a_K_count - a_expect
+    a_diff = ne.evaluate("a_K_count - a_expect")
     del a_K_count
     del a_expect
     b_K_count, b_expect = get_expect_reverse(seqfile, M, K, Num_Threads, P_dir, sequence, from_seq)
-    b_diff = b_K_count - b_expect
+    b_diff = ne.evaluate("b_K_count - b_expect")
     del b_K_count
     del b_expect
-    denom = np.power(a_diff**2 + b_diff**2, 0.25)
-    with np.errstate(divide='ignore', invalid='ignore'):
-        a_f = a_diff/denom
-        a_f[np.isnan(a_f)]=0
-        b_f = b_diff/denom
-        b_f[np.isnan(b_f)]=0
-    return 0.5 * cosine(a_f, b_f)
+    denom = ne.evaluate("(a_diff**2 + b_diff**2)**0.25")
+    a_diff = ne.evaluate("a_diff/denom")
+    b_diff = ne.evaluate("b_diff/denom")
+    del denom
+    a_diff[np.isnan(a_diff)]=0
+    b_diff[np.isnan(b_diff)]=0
+    return 0.5 * cosine(a_diff, b_diff)
 
 def d2star_bias(seqfile, M, K, Num_Threads, P_dir, sequence = '', from_seq=False):
     a_K_count, a_expect = get_expect(seqfile, M, K, Num_Threads, False, P_dir, sequence, from_seq)
-    a_diff = a_K_count - a_expect
+    a_diff = ne.evaluate("a_K_count - a_expect")
     del a_K_count
-    with np.errstate(divide='ignore', invalid='ignore'):
-        a_f = (a_diff)/np.sqrt(a_expect)
-        a_f[np.isnan(a_f)]=0
+    a_diff = ne.evaluate("a_diff/sqrt(a_expect)")
+    a_diff[np.isnan(a_diff)]=0
     del a_expect
     b_K_count, b_expect = get_expect_reverse(seqfile, M, K, Num_Threads, P_dir, sequence, from_seq)
-    b_diff = b_K_count - b_expect
+    b_diff = ne.evaluate("b_K_count - b_expect")
     del b_K_count
-    with np.errstate(divide='ignore', invalid='ignore'):
-        b_f = (b_diff)/np.sqrt(b_expect)
-        b_f[np.isnan(b_f)]=0
+    b_diff = ne.evluate("b_diff/sqrt(b_expect)")
+    b_diff[np.isnan(b_diff)]=0
     del b_expect
-    return 0.5 * cosine(a_f, b_f)
+    return 0.5 * cosine(a_diff, b_diff)
 
 def cosine_matrix(f1_matrix, f2_matrix=None):
     if f2_matrix is not None:
@@ -473,12 +513,11 @@ def d2shepp_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, seq
             a_diff = diff_matrix[i]
             for j in range(i+1, N):
                 b_diff = diff_matrix[j]
-                denom = np.power(a_diff**2 + b_diff**2, 0.25)
-                with np.errstate(divide='ignore', invalid='ignore'):
-                    a_f = a_diff/denom
-                    a_f[np.isnan(a_f)]=0
-                    b_f = b_diff/denom
-                    b_f[np.isnan(b_f)]=0 
+                denom = ne.evaluate("(a_diff**2 + b_diff**2)**0.25")
+                a_f = ne.evaluate("a_diff/denom")
+                a_f[np.isnan(a_f)]=0
+                b_f = ne.evaluate("b_diff/denom")
+                b_f[np.isnan(b_f)]=0 
                 matrix[i][j] = 0.5 * cosine(a_f, b_f)
                 matrix[j][i] = matrix[i][j]
         return matrix 
@@ -554,12 +593,11 @@ def d2shepp_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, 
             a_diff = a_diff_matrix[i]
             for j in range(N2):
                 b_diff = b_diff_matrix[j]
-                denom = np.power(a_diff**2 + b_diff**2, 0.25)
-                with np.errstate(divide='ignore', invalid='ignore'):
-                    a_f = a_diff/denom
-                    a_f[np.isnan(a_f)]=0
-                    b_f = b_diff/denom
-                    b_f[np.isnan(b_f)]=0 
+                denom = ne.evaluate("(a_diff**2 + b_diff**2)**0.25")
+                a_f = ne.evaluate("a_diff/denom")
+                a_f[np.isnan(a_f)]=0
+                b_f = ne.evaluate("b_diff/denom")
+                b_f[np.isnan(b_f)]=0 
                 matrix[i][j] = 0.5 * cosine(a_f, b_f)
         return matrix
     else:
