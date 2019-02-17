@@ -145,8 +145,10 @@ def get_expect(seqfile, M, K, Num_Threads, Reverse, P_dir, sequence = '', from_s
         trans = get_transition(M_count)
         expect = M_count
         for _ in range(K-M):
-            trans = np.tile(trans, (4, 1))
-            expect = (expect[:,np.newaxis] * trans).flatten()
+            #trans = np.tile(trans, (4, 1))
+            #expect = (expect[:,np.newaxis] * trans).flatten()
+            expect = expect.reshape(-1, trans.shape[0], 1) * trans[np.newaxis, :, :]
+        expect = expect.ravel()
         if P_dir != 'None':
             np.save(seqfile_e_p, expect)
     return K_count, expect
@@ -229,6 +231,17 @@ def get_d2star_all_f(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_l
         seqfile = seqname_list[i]
         f_matrix[i] = get_d2star_f(seqfile, M, K, Num_Threads, Reverse, P_dir, sequence, from_seq)
     return f_matrix
+
+def get_d2shepp_diff(seqfile, M, K, Num_Threads, Reverse, P_dir, sequence = '', from_seq=False):
+    seqfile_f_p = os.path.join(P_dir, os.path.basename(seqfile) + '.%s_M%d_K%d_d2shepp_diff.npy'%('R' if Reverse else 'NR', M-1, K))
+    if os.path.exists(seqfile_f_p):
+        d2shepp_diff = np.load(seqfile_f_p)
+    else:
+        K_count, d2shepp_diff = get_expect(seqfile, M, K, Num_Threads, Reverse, P_dir, sequence, from_seq)
+        if P_dir != 'None':
+            ne.evaluate('K_count-d2shepp_diff', out=d2shepp_diff)
+            np.save(seqfile_f_p, d2shepp_diff)
+    return d2shepp_diff
 '''
 def get_CVTree_f_deprecated(seqfile, M, K, Num_Threads, Reverse, P_dir, sequence = '', from_seq=False):
     M = K - 1
@@ -292,10 +305,11 @@ def get_all_diff(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list 
         else:
             sequence = ''
         seqfile = seqname_list[i]
-        a_K_count, a_expect = get_expect(seqfile, M, K, Num_Threads, Reverse, P_dir, sequence, from_seq)
+        diff_matrix[i] = get_d2shepp_diff(seqfile, M, K, Num_Threads, Reverse, P_dir, sequence, from_seq)
+        #a_K_count, a_expect = get_expect(seqfile, M, K, Num_Threads, Reverse, P_dir, sequence, from_seq)
         #a_diff = a_K_count - a_expect
         #diff_matrix[i] = a_diff
-        np.subtract(a_K_count, a_expect, out=diff_matrix[i])
+        #np.subtract(a_K_count, a_expect, out=diff_matrix[i])
     return diff_matrix
 
 '''
@@ -374,9 +388,8 @@ def d2shepp_deprecated(seqfile_1, seqfile_2, M, K, Num_Threads, Reverse, P_dir, 
         b_f = b_diff/denom
         b_f[np.isnan(b_f)]=0 
     return 0.5 * cosine(a_f, b_f)
-'''
 
-def d2shepp(seqfile_1, seqfile_2, M, K, Num_Threads, Reverse, P_dir, sequence_1 = '', sequence_2 = '', from_seq=False):
+def d2shepp_deprecated(seqfile_1, seqfile_2, M, K, Num_Threads, Reverse, P_dir, sequence_1 = '', sequence_2 = '', from_seq=False):
     a_K_count, a_expect = get_expect(seqfile_1, M, K, Num_Threads, Reverse, P_dir, sequence_1, from_seq)
     a_diff = ne.evaluate("a_K_count - a_expect")
     del a_K_count
@@ -393,6 +406,17 @@ def d2shepp(seqfile_1, seqfile_2, M, K, Num_Threads, Reverse, P_dir, sequence_1 
     b_diff[np.isnan(b_diff)]=0
     #nom = ne.evaluate("sum(a_diff * b_diff)")
     #denom = np.sqrt(ne.evaluate("sum(a_diff**2)") * ne.evaluate("sum(b_diff**2)"))
+    return 0.5 * cosine(a_diff, b_diff)
+'''
+def d2shepp(seqfile_1, seqfile_2, M, K, Num_Threads, Reverse, P_dir, sequence_1 = '', sequence_2 = '', from_seq=False):
+    a_diff = get_d2shepp_diff(seqfile_1, M, K, Num_Threads, Reverse, P_dir, sequence_1, from_seq)
+    b_diff = get_d2shepp_diff(seqfile_2, M, K, Num_Threads, Reverse, P_dir, sequence_2, from_seq)
+    denom = ne.evaluate("(a_diff**2 + b_diff**2)**0.25")
+    ne.evaluate("a_diff/denom", out=a_diff)
+    ne.evaluate("b_diff/denom", out=b_diff)
+    a_diff[np.isnan(a_diff)]=0
+    b_diff[np.isnan(b_diff)]=0
+    del denom
     return 0.5 * cosine(a_diff, b_diff)
 
 def d2shepp_bias(seqfile, M, K, Num_Threads, P_dir, sequence = '', from_seq=False):
