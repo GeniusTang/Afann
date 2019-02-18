@@ -152,7 +152,7 @@ def get_expect(seqfile, M, K, Num_Threads, Reverse, P_dir, sequence = '', from_s
         if P_dir != 'None':
             np.save(seqfile_e_p, expect)
     return K_count, expect
-
+'''
 def get_expect_reverse(seqfile, M, K, Num_Threads, P_dir, sequence = '', from_seq=False):
     a_M_count, a_K_count = get_M_K(seqfile, M, K, Num_Threads, False, P_dir, sequence, from_seq)
     b_M_count, b_K_count = get_M_K(seqfile, M, K, Num_Threads, True, P_dir, sequence, from_seq)
@@ -168,6 +168,21 @@ def get_expect_reverse(seqfile, M, K, Num_Threads, P_dir, sequence = '', from_se
         trans = np.tile(trans, (4, 1))
         expect = (expect[:,np.newaxis] * trans).flatten()
     return K_count, expect
+'''
+def get_expect_reverse(seqfile, M, K, Num_Threads, P_dir, sequence = '', from_seq=False):
+    a_M_count, a_K_count = get_M_K(seqfile, M, K, Num_Threads, False, '', sequence, from_seq)
+    b_M_count, b_K_count = get_M_K(seqfile, M, K, Num_Threads, True, P_dir, sequence, from_seq)
+    M_count = b_M_count - a_M_count
+    del a_M_count
+    del b_M_count
+    ne.evaluate('b_K_count - a_K_count', out=b_K_count)
+    del a_K_count
+    trans = get_transition(M_count)
+    expect = M_count
+    for _ in range(K-M):
+        expect = expect.reshape(-1, trans.shape[0], 1) * trans[np.newaxis, :, :]
+    expect = expect.ravel()
+    return b_K_count, expect
 
 def BIC(seqfile, K, Num_Threads, Reverse, P_dir, sequence = '', from_seq=False):
     M = K - 2
@@ -418,19 +433,53 @@ def d2shepp(seqfile_1, seqfile_2, M, K, Num_Threads, Reverse, P_dir, sequence_1 
     b_diff[np.isnan(b_diff)]=0
     del denom
     return 0.5 * cosine(a_diff, b_diff)
+'''
+def d2shepp_bias(seqfile, M, K, Num_Threads, P_dir, sequence = '', from_seq=False):
+    a_K_count, a_diff = get_expect(seqfile, M, K, Num_Threads, False, P_dir, sequence, from_seq)
+    ne.evaluate("a_K_count - a_diff", out=a_diff)
+    del a_K_count
+    b_K_count, b_diff = get_expect_reverse(seqfile, M, K, Num_Threads, P_dir, sequence, from_seq)
+    ne.evaluate("b_K_count - b_diff", out=b_diff)
+    del b_K_count
+    denom = ne.evaluate("(a_diff**2 + b_diff**2)**0.25")
+    ne.evaluate("a_diff/denom", out=a_diff)
+    ne.evaluate("b_diff/denom", out=b_diff)
+    del denom
+    a_diff[np.isnan(a_diff)]=0
+    b_diff[np.isnan(b_diff)]=0
+    return 0.5 * cosine(a_diff, b_diff)
+'''
 
 def d2shepp_bias(seqfile, M, K, Num_Threads, P_dir, sequence = '', from_seq=False):
-    a_K_count, a_expect = get_expect(seqfile, M, K, Num_Threads, False, P_dir, sequence, from_seq)
-    a_diff = ne.evaluate("a_K_count - a_expect")
+    a_M_count, a_K_count = get_M_K(seqfile, M, K, Num_Threads, False, 'None', sequence, from_seq)
+    seqfile_e_p = os.path.join(P_dir, os.path.basename(seqfile) + '.%s_M%d_K%d_e.npy'%('NR', M-1, K))
+    if os.path.exists(seqfile_e_p):
+        a_diff = np.load(seqfile_e_p)
+    else:
+        trans = get_transition(a_M_count)
+        a_diff = a_M_count
+        for _ in range(K-M):
+            a_diff = a_diff.reshape(-1, trans.shape[0], 1) * trans[np.newaxis, :, :]
+        a_diff = a_diff.ravel()
+        ne.evaluate("a_K_count - a_diff", out=a_diff)
+         
+    b_M_count, b_K_count = get_M_K(seqfile, M, K, Num_Threads, True, P_dir, sequence, from_seq)
+    ne.evaluate('b_K_count-a_K_count', out=b_K_count)
     del a_K_count
-    del a_expect
-    b_K_count, b_expect = get_expect_reverse(seqfile, M, K, Num_Threads, P_dir, sequence, from_seq)
-    b_diff = ne.evaluate("b_K_count - b_expect")
+    ne.evaluate('b_M_count-a_M_count', out=b_M_count)
+    del a_M_count
+    trans = get_transition(b_M_count)
+    b_diff = b_M_count
+    for _ in range(K-M):
+        b_diff = b_diff.reshape(-1, trans.shape[0], 1) * trans[np.newaxis, :, :]
+    b_diff = b_diff.ravel()
+    ne.evaluate("b_K_count - b_diff", out=b_diff)
+
     del b_K_count
-    del b_expect
+    del b_M_count
     denom = ne.evaluate("(a_diff**2 + b_diff**2)**0.25")
-    a_diff = ne.evaluate("a_diff/denom")
-    b_diff = ne.evaluate("b_diff/denom")
+    ne.evaluate("a_diff/denom", out=a_diff)
+    ne.evaluate("b_diff/denom", out=b_diff)
     del denom
     a_diff[np.isnan(a_diff)]=0
     b_diff[np.isnan(b_diff)]=0
