@@ -253,8 +253,8 @@ def get_d2shepp_diff(seqfile, M, K, Num_Threads, Reverse, P_dir, sequence = '', 
         d2shepp_diff = np.load(seqfile_f_p)
     else:
         K_count, d2shepp_diff = get_expect(seqfile, M, K, Num_Threads, Reverse, P_dir, sequence, from_seq)
+        ne.evaluate('K_count-d2shepp_diff', out=d2shepp_diff)
         if P_dir != 'None':
-            ne.evaluate('K_count-d2shepp_diff', out=d2shepp_diff)
             np.save(seqfile_f_p, d2shepp_diff)
     return d2shepp_diff
 '''
