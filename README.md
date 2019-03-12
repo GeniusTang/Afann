@@ -14,7 +14,7 @@ conda install numpy scipy scikit-learn
 ## Installing:
 Clone this repository into your local directory:
 ```
-git clone https://github.com/GeniusTang/AlignmentFree.git
+git clone https://github.com/GeniusTang/Afann.git
 ```
 
 Unix setup:
