@@ -34,29 +34,39 @@ Calculate pairwise d2star,d2shepp,CVtree,Ma,Eu,d2 distances among all samples li
 * -d: Save kmer counts in test_count/
 * -o: Save outputs in test_result/
 ```
-python alignmentfree.py -r -a d2star,d2shepp,CVtree,Ma,Eu,d2 -k 5 -m 0 -f test_file.txt -t 8 -d test_count/ -o test_result/
+python afann.py -r -a d2star,d2shepp,CVtree,Ma,Eu,d2 -k 5 -m 0 -f test_file.txt -t 8 -d test_count/ -o test_result/
 ```
-### Example2:
+### Example2: 
+Calculate pairwise d2star,d2shepp distances among all samples listed in test_file.txt, using kmer length 5, Markovian order 0 with bias adjustment.
+* -r: Consider reverse complement of kmers.
+* -t: Use 8 threads.
+* -d: Save kmer counts in test_count/
+* -o: Save outputs in test_result/
+* --adjust: Bias adjustment for NGS samples.
+```
+python afann.py -r -a d2star,d2shepp -k 5 -m 0 -f test_file.txt -t 8 -d test_count/ -o test_result/ --adjust
+```
+### Example3:
 Calculate pairwise d2star,d2shepp,CVtree,Ma,Eu,d2 distances among all samples listed in test_file_1.txt and all samples listed in test_file_2.txt, using kmer length 5, Markovian order 0.
 ```
-python alignmentfree.py --slow -r -a d2star,d2shepp,CVtree,Ma,Eu,d2 -k 5 -m 0 -f1 test_file_1.txt -f2 test_file_2.txt -t 8 -d test_count/ -o test_result/test
+python afann.py --slow -r -a d2star,d2shepp,CVtree,Ma,Eu,d2 -k 5 -m 0 -f1 test_file_1.txt -f2 test_file_2.txt -t 8 -d test_count/ -o test_result/test
 ```
 * -o: Save outputs in test_result/ with prefix test
 * --slow: Calculate with less memory usage, but slower
-### Example3:
+### Example4:
 Calculate pairwise d2star,d2shepp distances among all sequences listed in test_samples/crm.fa, using kmer length 5, Markovian order 1.
 ```
-python alignmentfree.py -r -a d2star,d2shepp -k 5 -m 1 -s test_samples/crm.fa -t 8 -d test_count/ -o test_result/crm
+python afann.py -r -a d2star,d2shepp -k 5 -m 1 -s test_samples/crm.fa -t 8 -d test_count/ -o test_result/crm
 ```
 * -o: Save outputs in test_result/ with prefix crm
-### Example4:
+### Example5:
 Calculate the Markovian orders of all sequences listed in test_file.txt.
 ```
-python alignmentfree.py -r --BIC -k 5 -f test_file.txt -t 8 -d test_count/ -o test_result/test
+python afann.py -r --BIC -k 5 -f test_file.txt -t 8 -d test_count/ -o test_result/test
 ```
 ## Usage:
 ```
-usage: alignmentfree.py [-h] [-a METHOD] -k K [-m M] [-f FILENAME]
+usage: afann.py [-h] [-a METHOD] -k K [-m M] [-f FILENAME]
                         [-s SEQUENCE_FILE] [-f1 FILENAME1] [-f2 FILENAME2]
                         [-s1 SEQUENCE_FILE_1] [-s2 SEQUENCE_FILE_2] [-d DIR]
                         [-o OUTPUT] [-t THREADS] [-r] [--adjust] [--BIC]
