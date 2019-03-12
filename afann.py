@@ -283,7 +283,7 @@ if __name__ == "__main__":
                 if a_method in ['d2star', 'd2shepp'] and Reverse and adjust:
                     bias_array = get_bias(a_method)(seqname_list, M, K, Num_Threads, Reverse, P_dir,  sequence_list, from_seq, slow)
                     write_bias(output, a_method, seqname_list, [], bias_array, [], from_seq)
-                    new_matrix = method.matrix_adjusted_pairwise(matrix, bias_array)
+                    new_matrix = method.matrix_adjusted_pairwise(matrix, bias_array, a_method)
                     write_tsv(output, a_method + '_adjusted', seqname_list, new_matrix, from_seq)
                     write_phy(output, a_method + '_adjusted', seqname_list, new_matrix, from_seq)
         else: 
@@ -305,6 +305,6 @@ if __name__ == "__main__":
                     bias_array_1 = get_bias(a_method)(seqname_list_1, M, K, Num_Threads, Reverse, P_dir,  sequence_list_1, from_seq, slow)
                     bias_array_2 = get_bias(a_method)(seqname_list_2, M, K, Num_Threads, Reverse, P_dir,  sequence_list_2, from_seq, slow)
                     write_bias(output, a_method, seqname_list_1, seqname_list_2, bias_array_1, bias_array_2, from_seq)
-                    new_matrix = method.matrix_adjusted_groupwise(matrix, bias_array_1, bias_array_2)
+                    new_matrix = method.matrix_adjusted_groupwise(matrix, bias_array_1, bias_array_2, a_method)
                     write_phy_group(output, a_method + '_adjusted', seqname_list_1, seqname_list_2, new_matrix, from_seq)
                     write_tsv_group(output, a_method + '_adjusted', seqname_list_1, seqname_list_2, new_matrix, from_seq)
