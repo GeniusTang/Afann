@@ -6,6 +6,7 @@ from src._count import kmer_count_m_k_seq
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.metrics.pairwise import manhattan_distances
 from sklearn.metrics.pairwise import euclidean_distances
+from model import padding_MLPR 
 from scipy import stats
 from functools import partial
 import numpy as np
@@ -538,7 +539,8 @@ def cosine_matrix(f1_matrix, f2_matrix=None):
         matrix = 0.5 * (1 - cosine_similarity(f1_matrix, f2_matrix))
     else:
         matrix = 0.5 * (1 - cosine_similarity(f1_matrix))
-    np.fill_diagonal(matrix, 0)
+    if f2_matrix is None:
+        np.fill_diagonal(matrix, 0)
     return matrix
 
 def Ma_matrix(f1_matrix, f2_matrix=None):
@@ -546,7 +548,8 @@ def Ma_matrix(f1_matrix, f2_matrix=None):
         matrix = manhattan_distances(f1_matrix, f2_matrix)
     else:
         matrix = manhattan_distances(f1_matrix)
-    np.fill_diagonal(matrix, 0)
+    if f2_matrix is None:
+        np.fill_diagonal(matrix, 0)
     return matrix
 
 def Eu_matrix(f1_matrix, f2_matrix=None):
@@ -554,7 +557,8 @@ def Eu_matrix(f1_matrix, f2_matrix=None):
         matrix = euclidean_distances(f1_matrix, f2_matrix)
     else:
         matrix = euclidean_distances(f1_matrix)
-    np.fill_diagonal(matrix, 0)
+    if f2_matrix is None:
+        np.fill_diagonal(matrix, 0)
     return matrix
  
 def dist_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list = [], from_seq=False, method = None):
@@ -723,29 +727,27 @@ def bias_array(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list = 
 d2shepp_bias_array = partial(bias_array, method = d2shepp_bias)
 d2star_bias_array = partial(bias_array, method = d2star_bias)
 
-def bias_adjust(dist, bias_1, bias_2):
-   sim_1 = ((0.5-bias_1)*2)**0.5 
-   sim_2 = ((0.5-bias_2)*2)**0.5 
-   sim_min = (min(sim_1, sim_2)**4 * max(sim_1, sim_2))**(1/5)
-   sim = (0.5-dist)*2
-   a = np.linspace(0, 1, 10000)
-   b = abs(a * sim_min ** (1 + (a**0.5-sim_min)/1.5) - sim)
-   sim = a[np.argmin(b)]
-   return (1-sim)*0.5
+def bias_adjust(dist, bias_1, bias_2, model):
+    sim_1 = (0.5-bias_1)*2
+    sim_2 = (0.5-bias_2)*2
+    sim = (0.5-dist)*2
+    return (1-model.predict([[sim, sim_1, sim_2]])[0])/2
 
-def matrix_adjusted_pairwise(matrix, bias_array):
-   new_matrix = np.zeros_like(matrix)
-   row = matrix.shape[0]
-   for i in range(row):
-       for j in range(i+1, row):
-           new_matrix[i][j] = bias_adjust(matrix[i][j], bias_array[i], bias_array[j])
-           new_matrix[j][i] = bias_adjust(matrix[i][j], bias_array[i], bias_array[j])
-   return new_matrix
+def matrix_adjusted_pairwise(matrix, bias_array, method):
+    new_matrix = np.zeros_like(matrix)
+    row = matrix.shape[0]
+    model = padding_MLPR(method)
+    for i in range(row):
+        for j in range(i+1, row):
+            new_matrix[i][j] = bias_adjust(matrix[i][j], bias_array[i], bias_array[j], model)
+            new_matrix[j][i] = new_matrix[i][j]
+    return new_matrix
 
-def matrix_adjusted_groupwise(matrix, bias_array_1, bias_array_2):
+def matrix_adjusted_groupwise(matrix, bias_array_1, bias_array_2, method):
     new_matrix = np.zeros_like(matrix)
     row, col = matrix.shape
+    model = padding_MLPR(method)
     for i in range(row):
         for j in range(col):
-            new_matrix[i][j] = bias_adjust(matrix[i][j], bias_array_1[i], bias_array_2[j])
+            new_matrix[i][j] = bias_adjust(matrix[i][j], bias_array_1[i], bias_array_2[j], model)
     return new_matrix
