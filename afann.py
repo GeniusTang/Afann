@@ -203,11 +203,7 @@ def write_BIC(output, seqname_list, BIC_list, from_seq):
         filename = '.'.join([output, 'BIC'])
     with open(filename, 'wt') as f:
         for i in range(len(seqname_list)):
-            seqname = seqname_list[i]
-            if not from_seq:
-                seqname = os.path.basename(seqname)
-                for suffix in Suffix:
-                    seqname = seqname.strip(suffix)
+            seqname = seqname_strip(seqname_list[i], from_seq)
             f.write('%s\t%d\n'%(seqname, BIC_list[i]))
 
 if __name__ == "__main__":
