@@ -6,6 +6,7 @@ from src._count import kmer_count_m_k_seq
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.metrics.pairwise import manhattan_distances
 from sklearn.metrics.pairwise import euclidean_distances
+from sklearn.utils.extmath import safe_sparse_dot
 from model import padding_MLPR 
 from scipy import stats
 from functools import partial
@@ -232,6 +233,8 @@ def get_d2star_f(seqfile, M, K, Num_Threads, Reverse, P_dir, sequence = '', from
         K_count, expect = get_expect(seqfile, M, K, Num_Threads, Reverse, P_dir, sequence, from_seq)
         d2star_f = ne.evaluate("(K_count-expect)/sqrt(expect)")
         d2star_f[np.isnan(d2star_f)]=0
+        denom = np.sqrt(ne.evaluate("sum(d2star_f * d2star_f)"))
+        d2star_f = ne.evaluate("d2star_f / denom")
         if P_dir != 'None':
             np.save(seqfile_f_p, d2star_f)
     return d2star_f
@@ -282,6 +285,8 @@ def get_CVTree_f(seqfile, M, K, Num_Threads, Reverse, P_dir, sequence = '', from
         K_count, expect = get_expect(seqfile, M, K, Num_Threads, Reverse, P_dir, sequence, from_seq)
         CVTree_f = ne.evaluate("(K_count-expect)/expect")
         CVTree_f[np.isnan(CVTree_f)]=0
+        denom = np.sqrt(ne.evaluate("sum(CVTree_f * CVTree_f)"))
+        CVTree_f = ne.evaluate("CVTree_f / denom")
         if P_dir != 'None':
             np.save(seqfile_f_p, CVTree_f)
     return CVTree_f
@@ -341,6 +346,9 @@ def cosine(a, b):
     denom = np.sqrt(ne.evaluate("sum(a ** 2)") * ne.evaluate("sum(b ** 2)"))
     return 1 - num / denom
 
+def dot(a, b):
+    return 1 - ne.evaluate("sum(a * b)")
+
 def Ma(seqfile_1, seqfile_2, M, K, Num_Threads, Reverse, P_dir, sequence_1 = '', sequence_2 = '', from_seq=False):
     a_K = get_K(seqfile_1, K, Num_Threads, Reverse, P_dir, sequence_1, from_seq)
     b_K = get_K(seqfile_2, K, Num_Threads, Reverse, P_dir, sequence_2, from_seq) 
@@ -376,7 +384,7 @@ def d2star(seqfile_1, seqfile_2, M, K, Num_Threads, Reverse, P_dir, sequence_1 =
     else:
         a_f = get_d2star_f(seqfile_1, M, K, Num_Threads, Reverse, P_dir)
         b_f = get_d2star_f(seqfile_2, M, K, Num_Threads, Reverse, P_dir)
-    return 0.5 * cosine(a_f, b_f)
+    return 0.5 * dot(a_f, b_f)
 
 def CVTree(seqfile_1, seqfile_2, M, K, Num_Threads, Reverse, P_dir, sequence_1 = '', sequence_2 = '', from_seq=False):
     if from_seq:
@@ -385,7 +393,7 @@ def CVTree(seqfile_1, seqfile_2, M, K, Num_Threads, Reverse, P_dir, sequence_1 =
     else:
         a_f = get_CVTree_f(seqfile_1, M, K, Num_Threads, Reverse, P_dir)
         b_f = get_CVTree_f(seqfile_2, M, K, Num_Threads, Reverse, P_dir)
-    return 0.5 * cosine(a_f, b_f)
+    return 0.5 * dot(a_f, b_f)
 
 '''
 def d2shepp_deprecated(seqfile_1, seqfile_2, M, K, Num_Threads, Reverse, P_dir, sequence_1 = '', sequence_2 = '', from_seq=False):
@@ -543,6 +551,15 @@ def cosine_matrix(f1_matrix, f2_matrix=None):
         np.fill_diagonal(matrix, 0)
     return matrix
 
+def dot_matrix(f1_matrix, f2_matrix=None):
+    if f2_matrix is not None:
+        matrix = 0.5 * (1 - safe_sparse_dot(f1_matrix, f2_matrix.T))
+    else:
+        matrix = 0.5 * (1 - safe_sparse_dot(f1_matrix, f1_matrix.T))
+    if f2_matrix is None:
+        np.fill_diagonal(matrix, 0)
+    return matrix
+
 def Ma_matrix(f1_matrix, f2_matrix=None):
     if f2_matrix is not None:
         matrix = manhattan_distances(f1_matrix, f2_matrix)
@@ -582,14 +599,14 @@ def dist_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequen
 def d2star_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list = [], from_seq=False, slow=False):
     if not slow:
         f_matrix = get_d2star_all_f(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq)
-        return cosine_matrix(f_matrix)
+        return dot_matrix(f_matrix)
     else:
         return dist_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq, method = d2star)
 
 def CVTree_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list = [], from_seq=False, slow=False):
     if not slow:
         f_matrix = get_CVTree_all_f(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq)
-        return cosine_matrix(f_matrix)
+        return dot_matrix(f_matrix)
     else:
         return dist_matrix_pairwise(seqname_list, M, K, Num_Threads, Reverse, P_dir, sequence_list, from_seq, method = CVTree)
 
@@ -656,7 +673,7 @@ def d2star_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, R
     if not slow:
         f1_matrix = get_d2star_all_f(seqname_list_1, M, K, Num_Threads, Reverse, P_dir, sequence_list_1, from_seq)
         f2_matrix = get_d2star_all_f(seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_2, from_seq)
-        return cosine_matrix(f1_matrix, f2_matrix)
+        return dot_matrix(f1_matrix, f2_matrix)
     else:
         return dist_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_1, sequence_list_2, from_seq, method = d2star)
 
@@ -664,7 +681,7 @@ def CVTree_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, R
     if not slow:
         f1_matrix = get_CVTree_all_f(seqname_list_1, M, K, Num_Threads, Reverse, P_dir, sequence_list_1, from_seq)
         f2_matrix = get_CVTree_all_f(seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_2, from_seq)
-        return cosine_matrix(f1_matrix, f2_matrix)
+        return dot_matrix(f1_matrix, f2_matrix)
     else:
         return dist_matrix_groupwise(seqname_list_1, seqname_list_2, M, K, Num_Threads, Reverse, P_dir, sequence_list_1, sequence_list_2, from_seq, method = CVTree)
 
