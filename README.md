@@ -8,7 +8,7 @@ Afann (Alignment-Free methods Adjusted by Neural Network) is an alignment-free s
 * Required Python3 packages: numpy, sklearn-learn.
 * We recommend use [Anaconda3](https://www.anaconda.com/download/) to install all required packages:
 ```
-conda install numpy scipy scikit-learn
+conda install numpy scikit-learn
 ```
 
 ## Installing:
