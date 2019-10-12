@@ -1,8 +1,6 @@
 from src._count import kmer_count
 from src._count import kmer_count_m_k
-from scipy.spatial.distance import cosine
 from sklearn.metrics.pairwise import cosine_similarity
-from scipy import stats
 import numpy as np
 import time
 import os

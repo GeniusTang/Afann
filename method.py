@@ -2,13 +2,11 @@ from src._count import kmer_count
 from src._count import kmer_count_seq
 from src._count import kmer_count_m_k
 from src._count import kmer_count_m_k_seq
-#from scipy.spatial.distance import cosine
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.metrics.pairwise import manhattan_distances
 from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.utils.extmath import safe_sparse_dot
 from model import padding_MLPR 
-from scipy import stats
 from functools import partial
 import numpy as np
 import numexpr as ne
