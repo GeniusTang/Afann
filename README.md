@@ -1,11 +1,11 @@
-# AlignmentFree
-Afann (Alignment-Free methods Adjusted by Neural Network) is an alignment-free software that supports fast calculation of different dissimilarity measures including d2star, d2shepp, CVtree, Mahattan, Euclidean and d2. It also adjusts the bias of d2star and d2shepp calculated from NGS samples.
+# Afann
+Afann (Alignment-Free methods Adjusted by Neural Network) is an alignment-free software that supports fast calculation of different dissimilarity measures including d2star, d2shepp, CVtree, Manhattan, Euclidean and d2. It also adjusts the bias of d2star and d2shepp calculated from NGS samples.
 
 ## Prerequisites:
 ### Program:
 * [Python3](https://www.python.org/downloads/release/python-363/) or [Anaconda3](https://www.anaconda.com/download/)
 ### Packages:
-* Required Python3 packages: numpy, scipy, sklearn-learn.
+* Required Python3 packages: numpy, sklearn-learn.
 * We recommend use [Anaconda3](https://www.anaconda.com/download/) to install all required packages:
 ```
 conda install numpy scipy scikit-learn
