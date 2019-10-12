@@ -1,5 +1,5 @@
 # AlignmentFree
-Fast alignment-free software
+Afann (Alignment-Free methods Adjusted by Neural Network) is an alignment-free software that supports fast calculation of $d_2^*$,d2shepp,CVtree,Ma,Eu,d2.
 
 ## Prerequisites:
 ### Program:
@@ -107,3 +107,14 @@ Optional arguments:
   --slow               Use slow mode for calculation with less memory usage
                        (default: False)
 ```
+
+##Copyright and License Information:
+Copyright (C) 2019 University of Southern California
+
+Authors: Kujin Tang, Jie Ren, Fengzhu Sun
+
+This program is freely available at <https://github.com/GeniusTang/Afann> under the terms of USC-RL v1.0.
+
+Commercial users should contact Dr. Sun at <fsun@usc.edu>, copyright at the University of Southern California.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
