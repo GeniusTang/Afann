@@ -1,7 +1,9 @@
 # Afann
 [![DOI](https://zenodo.org/badge/143416010.svg)](https://zenodo.org/badge/latestdoi/143416010)
 
-Afann (Alignment-Free methods Adjusted by Neural Network) is an alignment-free software that supports fast calculation of different dissimilarity measures including d2star, d2shepp, CVtree, Manhattan, Euclidean and d2. It also adjusts the bias of d2star and d2shepp calculated from sequencing samples.
+Afann (Alignment-Free methods Adjusted by Neural Network) is an alignment-free software that supports fast calculation of different dissimilarity measures including d2star, d2shepp, CVtree, Manhattan, Euclidean and d2. It also adjusts the bias of d2star and d2shepp calculated from sequencing samples.  More details of Afann are provided in the following paper:
+
+[Tang, K., Ren, J. & Sun, F. Afann: bias adjustment for alignment-free sequence comparison based on sequencing data using neural network regression. Genome Biol 20, 266 (2019). https://doi.org/10.1186/s13059-019-1872-3](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-019-1872-3)
 
 ## Prerequisites:
 ### Program:
